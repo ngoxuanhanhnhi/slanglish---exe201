@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: english_app_db_dev
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data_dev:/var/opt/mssql
+    networks:
+      - english_app_network
+    healthcheck:
+      test: [ "CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong!Passw0rd", "-C", "-Q", "SELECT 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service (.NET Web API)
+  backend:
+    build:
+      context: ./back_end_dotnet
+      dockerfile: Dockerfile
+    container_name: english_app_backend_dev
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=db;Database=EnglishApp;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
+      JWT__Key: "your-super-secret-jwt-key-at-least-32-chars-long-12345678"
+      JWT__Issuer: "EnglishApp"
+      JWT__Audience: "EnglishAppUsers"
+      FrontendUrl: "http://localhost:3000"
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - english_app_network
+
+  # Frontend Service (React + Vite)
+  frontend:
+    build:
+      context: ./front_end
+      dockerfile: Dockerfile.dev
+    container_name: english_app_frontend_dev
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:5000/api/v1
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./front_end:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - english_app_network
+
+networks:
+  english_app_network:
+    driver: bridge
+
+volumes:
+  sql_data_dev:

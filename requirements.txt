@@ -1,0 +1,154 @@
+# =====================================================
+# PROJECT REQUIREMENTS
+# English Learning Web Application
+# =====================================================
+
+# -----------------------------------------------------
+# 1. PROJECT OVERVIEW
+# -----------------------------------------------------
+Project type: English Learning Web Application
+Purpose: Practice English vocabulary, quizzes, listening, and track user progress
+
+Main features:
+- User authentication (register, login)
+- Vocabulary management
+- Lessons and quizzes (multiple choice)
+- Listening practice with audio
+- User learning progress tracking
+
+# -----------------------------------------------------
+# 2. FRONTEND REQUIREMENTS
+# -----------------------------------------------------
+Frontend framework: React 18
+Language: TypeScript
+Build tool: Vite
+UI framework: Tailwind CSS
+Routing: React Router v6
+State management: React Context + custom hooks
+HTTP client: Axios
+Form handling: React Hook Form
+Schema validation: Zod
+
+Frontend rules:
+- Use functional components only
+- No class components
+- Use async/await
+- Feature-based folder structure
+- Reusable UI components
+- Responsive design
+
+# -----------------------------------------------------
+# 3. BACKEND REQUIREMENTS
+# -----------------------------------------------------
+Runtime: Node.js 20
+Framework: Express.js
+Language: TypeScript
+API style: REST API
+Authentication: JWT (access token)
+Validation library: Zod
+ORM: Prisma
+
+Backend rules:
+- Controllers must be thin
+- Business logic must be in services
+- No database access inside controllers
+- Centralized error handling
+- Use middleware for authentication
+
+# -----------------------------------------------------
+# 4. DATABASE REQUIREMENTS
+# -----------------------------------------------------
+Database: PostgreSQL
+Migration tool: Prisma Migrate
+Database naming convention:
+- Tables and columns: snake_case
+- Code variables: camelCase
+
+Data requirements:
+- Users
+- Vocabulary
+- Lessons
+- Quizzes
+- Questions
+- User progress
+- Quiz results
+
+# -----------------------------------------------------
+# 5. DOCKER & DEVOPS REQUIREMENTS
+# -----------------------------------------------------
+Containerization: Docker
+Service orchestration: Docker Compose
+
+Services:
+- frontend (React)
+- backend (Node.js)
+- database (PostgreSQL)
+
+Ports:
+- Frontend: 3000
+- Backend: 5000
+- PostgreSQL: 5432
+
+Docker rules:
+- Use multi-stage Dockerfile
+- Use .env for secrets
+- Do not hardcode credentials
+- All services must run inside Docker
+
+# -----------------------------------------------------
+# 6. FOLDER STRUCTURE (STRICT)
+# -----------------------------------------------------
+Frontend structure:
+- src/features/
+- src/components/
+- src/services/
+- src/hooks/
+- src/pages/
+- src/types/
+
+Backend structure:
+- src/routes/
+- src/controllers/
+- src/services/
+- src/middlewares/
+- src/prisma/
+- src/utils/
+- src/app.ts
+
+# -----------------------------------------------------
+# 7. SECURITY REQUIREMENTS
+# -----------------------------------------------------
+- Hash passwords using bcrypt
+- Protect private routes using JWT middleware
+- Validate all request inputs
+- Do not expose secrets in source code
+
+# -----------------------------------------------------
+# 8. API DESIGN CONVENTION
+# -----------------------------------------------------
+Base path: /api/v1
+
+Endpoints examples:
+- GET    /api/v1/vocab
+- POST   /api/v1/vocab
+- GET    /api/v1/quiz/:id
+- POST   /api/v1/quiz/submit
+- GET    /api/v1/progress
+
+# -----------------------------------------------------
+# 9. CODE QUALITY & STYLE
+# -----------------------------------------------------
+- Use ESLint and Prettier
+- Use meaningful variable and function names
+- Prefer readability over clever code
+- Consistent code style across frontend and backend
+
+# -----------------------------------------------------
+# 10. COPILOT INSTRUCTIONS
+# -----------------------------------------------------
+Copilot must:
+- Follow the defined tech stack
+- Follow the defined architecture
+- Not introduce new frameworks
+- Not mix different architectures
+- Generate clean, readable, production-ready code
