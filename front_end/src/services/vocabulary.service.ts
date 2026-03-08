@@ -181,3 +181,18 @@ export const deleteGrammarTopicFile = async (id: string): Promise<GrammarTopic> 
   const res = await api.delete(`/grammar/topics/${id}/file`);
   return res.data.data;
 };
+
+export const exportVocabulary = async (): Promise<void> => {
+  const res = await api.get('/vocabulary/export', {
+    responseType: 'blob',
+  });
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  const date = new Date().toISOString().split('T')[0];
+  link.setAttribute('download', `Vocabulary_Export_${date}.xlsx`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};

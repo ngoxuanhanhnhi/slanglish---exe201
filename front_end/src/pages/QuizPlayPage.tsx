@@ -47,7 +47,7 @@ const QuizPlayPage = () => {
           setRemaining(data.time_limit * 60);
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -313,11 +313,10 @@ const QuizPlayPage = () => {
                   <button
                     key={opt}
                     onClick={() => setAnswer(current.id, opt)}
-                    className={`w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all text-sm font-medium ${
-                      selected
+                    className={`w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all text-sm font-medium ${selected
                         ? 'border-primary-500 bg-primary-50 text-primary-700'
                         : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                    }`}>
+                      }`}>
                     {opt}
                   </button>
                 );
@@ -333,11 +332,10 @@ const QuizPlayPage = () => {
                   <button
                     key={val}
                     onClick={() => setAnswer(current.id, val)}
-                    className={`flex-1 px-4 py-4 rounded-xl border-2 transition-all text-sm font-semibold ${
-                      selected
+                    className={`flex-1 px-4 py-4 rounded-xl border-2 transition-all text-sm font-semibold ${selected
                         ? 'border-primary-500 bg-primary-50 text-primary-700'
                         : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                    }`}>
+                      }`}>
                     {val}
                   </button>
                 );
@@ -372,13 +370,12 @@ const QuizPlayPage = () => {
             <button
               key={q.id}
               onClick={() => setCurrentIdx(idx)}
-              className={`w-7 h-7 rounded-full text-xs font-medium transition-all ${
-                idx === currentIdx
+              className={`w-7 h-7 rounded-full text-xs font-medium transition-all ${idx === currentIdx
                   ? 'bg-primary-600 text-white'
                   : answers[q.id]
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-              }`}>
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}>
               {idx + 1}
             </button>
           ))}

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Input } from '../components/ui';
 import { useAuth } from '../features/auth/AuthContext';
@@ -22,8 +22,8 @@ import {
   HiOutlineDocumentText,
   HiOutlineDownload,
 } from 'react-icons/hi';
-import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
+import { exportVocabulary } from '../services/vocabulary.service';
 import {
   getVocabularyByCategory,
   getCategoryCounts,
@@ -215,7 +215,7 @@ const WordModal = ({ open, editWord, defaultCategory, defaultTopicId, onClose, o
   }, [open, editWord, defaultCategory, defaultTopicId]);
 
   const set = (field: keyof VocabFormData, value: string) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev: VocabFormData) => ({ ...prev, [field]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1339,10 +1339,10 @@ const VocabularyPage = () => {
   // ── Grammar CRUD handlers ──────────────────────────────────────────────────
   const handleGrammarTopicSaved = (topic: GrammarTopic) => {
     if (editingGrammarTopic) {
-      setGrammarTopics((prev) => prev.map((t) => (t.id === topic.id ? topic : t)));
+      setGrammarTopics((prev: GrammarTopic[]) => prev.map((t) => (t.id === topic.id ? topic : t)));
     } else {
-      setGrammarTopics((prev) => [...prev, topic]);
-      setGrammarLevels((prev) =>
+      setGrammarTopics((prev: GrammarTopic[]) => [...prev, topic]);
+      setGrammarLevels((prev: GrammarLevel[]) =>
         prev.map((l) => (l.id === topic.level_id ? { ...l, topicCount: l.topicCount + 1 } : l))
       );
     }
@@ -1351,11 +1351,11 @@ const VocabularyPage = () => {
 
   const handleGrammarLevelSaved = (level: GrammarLevel) => {
     if (editingGrammarLevel) {
-      setGrammarLevels((prev) =>
+      setGrammarLevels((prev: GrammarLevel[]) =>
         prev.map((l) => (l.id === level.id ? { ...level, topicCount: l.topicCount } : l))
       );
     } else {
-      setGrammarLevels((prev) => [...prev, { ...level, topicCount: 0 }]);
+      setGrammarLevels((prev: GrammarLevel[]) => [...prev, { ...level, topicCount: 0 }]);
     }
     setEditingGrammarLevel(null);
   };
@@ -1366,8 +1366,8 @@ const VocabularyPage = () => {
     try {
       await deleteGrammarTopic(deletingGrammarTopic.id);
       toast.success('Đã xóa chủ đề ngữ pháp!');
-      setGrammarTopics((prev) => prev.filter((t) => t.id !== deletingGrammarTopic.id));
-      setGrammarLevels((prev) =>
+      setGrammarTopics((prev: GrammarTopic[]) => prev.filter((t) => t.id !== deletingGrammarTopic.id));
+      setGrammarLevels((prev: GrammarLevel[]) =>
         prev.map((l) =>
           l.id === selectedLevel?.id ? { ...l, topicCount: Math.max(0, l.topicCount - 1) } : l
         )
@@ -1425,11 +1425,11 @@ const VocabularyPage = () => {
   const handleWordSaved = (word: VocabItem) => {
     if (editingWord) {
       toast.success('Đã cập nhật từ vựng!');
-      setWords((prev) => prev.map((w) => (w.id === word.id ? word : w)));
+      setWords((prev: VocabItem[]) => prev.map((w) => (w.id === word.id ? word : w)));
     } else {
       toast.success('Đã thêm từ vựng mới!');
-      setWords((prev) => [...prev, word]);
-      setCategoryCounts((prev) => ({
+      setWords((prev: VocabItem[]) => [...prev, word]);
+      setCategoryCounts((prev: Record<string, number>) => ({
         ...prev,
         [word.category]: (prev[word.category] ?? 0) + 1,
       }));
@@ -1443,12 +1443,12 @@ const VocabularyPage = () => {
     try {
       await deleteVocabulary(deletingWord.id);
       toast.success('Đã xóa từ vựng thành công!');
-      setWords((prev) => prev.filter((w) => w.id !== deletingWord.id));
-      setCategoryCounts((prev) => ({
+      setWords((prev: VocabItem[]) => prev.filter((w) => w.id !== deletingWord.id));
+      setCategoryCounts((prev: Record<string, number>) => ({
         ...prev,
         [deletingWord.category]: Math.max(0, (prev[deletingWord.category] ?? 1) - 1),
       }));
-      setCompletedIds((prev) => {
+      setCompletedIds((prev: Set<string>) => {
         const next = new Set(prev);
         next.delete(deletingWord.id);
         return next;
@@ -1461,37 +1461,16 @@ const VocabularyPage = () => {
   };
 
   const handleExportExcel = async () => {
-    console.log('handleExportExcel triggered', { user, isAdmin });
-    if (!user || !isAdmin) {
-      console.warn('handleExportExcel: returning early because user or isAdmin is false', { user, isAdmin });
-      return;
-    }
+    if (!isAdmin) return;
+    const loadingToast = toast.loading('Đang chuẩn bị file Excel...');
     try {
-      console.log('handleExportExcel: Proceeding with fetch...');
-      const loadingToast = toast.loading('Đang chuẩn bị file Excel...');
-      const response = await fetch(`${API_BASE}/api/v1/vocabulary/export`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) throw new Error('Export failed');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Vocabulary_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast.dismiss(loadingToast);
+      await exportVocabulary();
       toast.success('Xuất file Excel thành công!');
-    } catch (error) {
-      console.error('Export error:', error);
+    } catch (err) {
+      console.error('Export Excel error:', err);
       toast.error('Có lỗi xảy ra khi xuất file Excel.');
+    } finally {
+      toast.dismiss(loadingToast);
     }
   };
 
@@ -1500,7 +1479,7 @@ const VocabularyPage = () => {
     setTogglingId(vocabId);
     try {
       const result = await toggleComplete(vocabId);
-      setCompletedIds((prev) => {
+      setCompletedIds((prev: Set<string>) => {
         const next = new Set(prev);
         if (result.completed) next.add(vocabId);
         else next.delete(vocabId);
