@@ -1,12 +1,11 @@
-import { useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { authService } from '../services/auth.service';
-import AuthLayout from '../components/layouts/AuthLayout';
-import { Button, Input } from '../components/ui';
+import { useAppStore, VIEW_STATES } from '../stores/appStore';
 import { HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff, HiOutlineCheckCircle, HiOutlineExclamationCircle } from 'react-icons/hi';
 
 const resetPasswordSchema = z
@@ -29,13 +28,28 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const token = searchParams.get('token');
+  const {
+    authResetToken,
+    setAuthResetToken,
+    resetPassShowPassword,
+    resetPassShowConfirmPassword,
+    resetPassLoading,
+    resetPassSuccess,
+    setResetPassShowPassword,
+    setResetPassShowConfirmPassword,
+    setResetPassLoading,
+    setResetPassSuccess,
+    setView
+  } = useAppStore();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const urlToken = searchParams.get('token');
+  const token = urlToken || authResetToken;
+
+  useEffect(() => {
+    if (urlToken) {
+      setAuthResetToken(urlToken);
+    }
+  }, [urlToken, setAuthResetToken]);
 
   const {
     register,
@@ -51,130 +65,161 @@ const ResetPasswordPage = () => {
       return;
     }
 
-    setIsLoading(true);
+    setResetPassLoading(true);
     try {
       await authService.resetPassword({ token, password: data.password });
-      setIsSuccess(true);
+      setResetPassSuccess(true);
       toast.success('Đặt lại mật khẩu thành công!');
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || 'Đặt lại mật khẩu thất bại. Vui lòng thử lại.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Đặt lại mật khẩu thất bại. Vui lòng thử lại.');
     } finally {
-      setIsLoading(false);
+      setResetPassLoading(false);
     }
   };
 
   if (!token) {
     return (
-      <AuthLayout title="Link không hợp lệ" subtitle="Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn">
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-              <HiOutlineExclamationCircle className="w-10 h-10 text-red-600" />
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-gray-100 italic text-center">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                <HiOutlineExclamationCircle className="w-10 h-10 text-red-600" />
+              </div>
             </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Link không hợp lệ</h2>
+            <p className="text-gray-600 mb-6">
+              Link đặt lại mật khẩu bạn nhấp vào không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.
+            </p>
+            <button
+              onClick={() => setView(VIEW_STATES.FORGOT_PASSWORD)}
+              className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors"
+            >
+              Yêu cầu link mới
+            </button>
           </div>
-          <p className="text-gray-600 mb-6">
-            Link đặt lại mật khẩu bạn nhấp vào không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.
-          </p>
-          <Link to="/forgot-password">
-            <Button className="w-full">Yêu cầu link mới</Button>
-          </Link>
         </div>
-      </AuthLayout>
+      </div>
     );
   }
 
-  if (isSuccess) {
+  if (resetPassSuccess) {
     return (
-      <AuthLayout title="Đặt lại thành công!" subtitle="Mật khẩu của bạn đã được đặt lại thành công">
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-              <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-gray-100 text-center">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
+              </div>
             </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Đặt lại thành công!</h2>
+            <p className="text-gray-600 mb-6">
+              Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới.
+            </p>
+            <button
+              onClick={() => setView(VIEW_STATES.LOGIN)}
+              className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-colors"
+            >
+              Đăng nhập ngay
+            </button>
           </div>
-
-          <p className="text-gray-600 mb-6">
-            Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới.
-          </p>
-
-          <Button onClick={() => navigate('/login')} className="w-full">
-            Đăng nhập ngay
-          </Button>
         </div>
-      </AuthLayout>
+      </div>
     );
   }
 
   return (
-    <AuthLayout title="Đặt lại mật khẩu" subtitle="Nhập mật khẩu mới của bạn">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <div>
-          <label className="label">Mật khẩu mới</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <HiOutlineLockClosed className="h-5 w-5 text-gray-400" />
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Đặt lại mật khẩu</h2>
+          <p className="text-gray-600 mb-8 text-center text-sm">Nhập mật khẩu mới của bạn</p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <HiOutlineLockClosed className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type={resetPassShowPassword ? 'text' : 'password'}
+                  placeholder="Nhập mật khẩu mới"
+                  className={`block w-full pl-10 pr-10 py-3 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-xl focus:ring-primary-500 focus:border-primary-500`}
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setResetPassShowPassword(!resetPassShowPassword)}
+                >
+                  {resetPassShowPassword ? (
+                    <HiOutlineEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <HiOutlineEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  )}
+                </button>
+              </div>
+              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
             </div>
-            <Input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Nhập mật khẩu mới"
-              className="pl-10 pr-10"
-              error={errors.password?.message}
-              {...register('password')}
-            />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <HiOutlineLockClosed className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type={resetPassShowConfirmPassword ? 'text' : 'password'}
+                  placeholder="Nhập lại mật khẩu mới"
+                  className={`block w-full pl-10 pr-10 py-3 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-xl focus:ring-primary-500 focus:border-primary-500`}
+                  {...register('confirmPassword')}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setResetPassShowConfirmPassword(!resetPassShowConfirmPassword)}
+                >
+                  {resetPassShowConfirmPassword ? (
+                    <HiOutlineEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <HiOutlineEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  )}
+                </button>
+              </div>
+              {errors.confirmPassword && <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>}
+            </div>
+
             <button
-              type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              onClick={() => setShowPassword(!showPassword)}
+              type="submit"
+              disabled={resetPassLoading}
+              className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 transition-all font-inter"
             >
-              {showPassword ? (
-                <HiOutlineEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              {resetPassLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Đang xử lý...
+                </div>
               ) : (
-                <HiOutlineEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                'Đặt lại mật khẩu'
               )}
             </button>
-          </div>
+
+            <p className="text-center text-gray-600 text-sm">
+              Nhớ mật khẩu rồi?{' '}
+              <button
+                type="button"
+                onClick={() => setView(VIEW_STATES.LOGIN)}
+                className="text-primary-600 hover:text-primary-700 font-semibold hover:underline"
+              >
+                Đăng nhập
+              </button>
+            </p>
+          </form>
         </div>
-
-        <div>
-          <label className="label">Xác nhận mật khẩu</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <HiOutlineLockClosed className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              type={showConfirmPassword ? 'text' : 'password'}
-              placeholder="Nhập lại mật khẩu mới"
-              className="pl-10 pr-10"
-              error={errors.confirmPassword?.message}
-              {...register('confirmPassword')}
-            />
-            <button
-              type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? (
-                <HiOutlineEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-              ) : (
-                <HiOutlineEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <Button type="submit" className="w-full" size="lg" isLoading={isLoading}>
-          Đặt lại mật khẩu
-        </Button>
-
-        <p className="text-center text-gray-600 text-sm">
-          Nhớ mật khẩu rồi?{' '}
-          <Link to="/login" className="text-primary-600 hover:text-primary-700 font-semibold hover:underline">
-            Đăng nhập
-          </Link>
-        </p>
-      </form>
-    </AuthLayout>
+      </div>
+    </div>
   );
 };
 

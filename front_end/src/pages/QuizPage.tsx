@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
+import { useAppStore } from '../stores/appStore';
 import {
   HiOutlineClipboardList,
   HiOutlinePlus,
@@ -31,13 +32,15 @@ import {
 const QuizPage = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+  const {
+    quizCategories: categories, selectedQuizCategory: selectedCategory,
+    quizzes, quizzesLoading,
+    setQuizCategories: setCategories, setSelectedQuizCategory: setSelectedCategory,
+    setQuizzes, setQuizzesLoading
+  } = useAppStore();
 
-  // ── State ───────────────────────────────────────────────────────────────────
-  const [categories, setCategories] = useState<QuizCategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<QuizCategory | null>(null);
-  const [quizzes, setQuizzes] = useState<QuizListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [quizzesLoading, setQuizzesLoading] = useState(false);
+  // ── Local State (Form/Modal) ──────────────────────────────────────────────
+  const [loading, setLoading] = useState(!categories.length);
 
   // Category modal
   const [catModalOpen, setCatModalOpen] = useState(false);
@@ -66,7 +69,7 @@ const QuizPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setCategories]);
 
   useEffect(() => { loadCategories(); }, [loadCategories]);
 
@@ -175,12 +178,13 @@ const QuizPage = () => {
       await deleteQuiz(deletingQuiz.id);
       toast.success('Đã xóa quiz!');
       setDeletingQuiz(null);
-      setQuizzes((prev) => prev.filter((q) => q.id !== deletingQuiz.id));
+      setQuizzes(quizzes.filter((q) => q.id !== deletingQuiz.id));
       await loadCategories();
     } catch {
       toast.error('Lỗi khi xóa quiz.');
     }
   };
+
 
   // ── Render ──────────────────────────────────────────────────────────────────
   if (loading) {

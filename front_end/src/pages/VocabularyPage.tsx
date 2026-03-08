@@ -23,7 +23,7 @@ import {
   HiOutlineDownload,
 } from 'react-icons/hi';
 import toast from 'react-hot-toast';
-import { exportVocabulary } from '../services/vocabulary.service';
+import { useAppStore, VIEW_STATES, CATEGORIES, GRAMMAR_LEVEL_COLORS } from '../stores/appStore';
 import {
   getVocabularyByCategory,
   getCategoryCounts,
@@ -52,6 +52,7 @@ import {
   deleteGrammarTopic,
   uploadGrammarTopicFile,
   deleteGrammarTopicFile,
+  exportVocabulary,
 } from '../services/vocabulary.service';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -60,16 +61,7 @@ const API_BASE = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http:/
 const TOPIC_CATEGORIES = ['a1', 'a2', 'b1', 'b2', 'c1', 'c2'];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type View = 'home' | 'vocabulary' | 'grammar' | 'grammar-topic-list' | 'vocab-list' | 'topic-list' | 'topic-vocab-list';
-
-// ─── Grammar level color palette ──────────────────────────────────────────────
-const GRAMMAR_LEVEL_COLORS = [
-  { gradient: 'from-green-400 to-emerald-500', lightBg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-700', icon: '📝' },
-  { gradient: 'from-orange-400 to-amber-500', lightBg: 'bg-orange-50', border: 'border-orange-200', badge: 'bg-orange-100 text-orange-700', icon: '🔥' },
-  { gradient: 'from-blue-400 to-blue-600', lightBg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', icon: '🎯' },
-  { gradient: 'from-purple-400 to-purple-600', lightBg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700', icon: '⚡' },
-  { gradient: 'from-rose-400 to-pink-600', lightBg: 'bg-rose-50', border: 'border-rose-200', badge: 'bg-rose-100 text-rose-700', icon: '💪' },
-];
+// Moved View to appStore.ts
 
 interface Category {
   id: string;
@@ -84,78 +76,7 @@ interface Category {
 }
 
 // ─── Category definitions ─────────────────────────────────────────────────────
-const BASE_CATEGORIES: Omit<Category, 'wordCount'>[] = [
-  {
-    id: 'slang',
-    name: 'Từ vựng Slang',
-    description: 'Tiếng lóng hiện đại, thường dùng trong giao tiếp hằng ngày của người bản xứ',
-    icon: '🗣️',
-    gradient: 'from-orange-400 to-amber-500',
-    lightBg: 'bg-orange-50',
-    border: 'border-orange-200',
-    badge: 'bg-orange-100 text-orange-700',
-  },
-  {
-    id: 'a1',
-    name: 'Từ vựng theo chủ đề level A1',
-    description: 'Từ vựng căn bản nhất dành cho người mới bắt đầu học tiếng Anh',
-    icon: '🌱',
-    gradient: 'from-green-400 to-emerald-500',
-    lightBg: 'bg-green-50',
-    border: 'border-green-200',
-    badge: 'bg-green-100 text-green-700',
-  },
-  {
-    id: 'a2',
-    name: 'Từ vựng theo chủ đề level A2',
-    description: 'Mở rộng vốn từ cho các tình huống giao tiếp đời thường quen thuộc',
-    icon: '🌿',
-    gradient: 'from-teal-400 to-cyan-500',
-    lightBg: 'bg-teal-50',
-    border: 'border-teal-200',
-    badge: 'bg-teal-100 text-teal-700',
-  },
-  {
-    id: 'b1',
-    name: 'Từ vựng theo chủ đề level B1',
-    description: 'Từ vựng trung cấp cho các chủ đề xã hội, công việc và giáo dục',
-    icon: '📘',
-    gradient: 'from-blue-400 to-blue-600',
-    lightBg: 'bg-blue-50',
-    border: 'border-blue-200',
-    badge: 'bg-blue-100 text-blue-700',
-  },
-  {
-    id: 'b2',
-    name: 'Từ vựng theo chủ đề level B2',
-    description: 'Từ vựng nâng cao cho tranh luận, ý kiến và các chủ đề phức tạp',
-    icon: '💡',
-    gradient: 'from-indigo-400 to-violet-500',
-    lightBg: 'bg-indigo-50',
-    border: 'border-indigo-200',
-    badge: 'bg-indigo-100 text-indigo-700',
-  },
-  {
-    id: 'c1',
-    name: 'Từ vựng theo chủ đề level C1',
-    description: 'Từ vựng học thuật và chuyên sâu cho người dùng thành thạo',
-    icon: '🎯',
-    gradient: 'from-purple-400 to-purple-600',
-    lightBg: 'bg-purple-50',
-    border: 'border-purple-200',
-    badge: 'bg-purple-100 text-purple-700',
-  },
-  {
-    id: 'c2',
-    name: 'Từ vựng theo chủ đề level C2',
-    description: 'Từ vựng tinh tế, phức tạp dành cho trình độ thông thạo như người bản ngữ',
-    icon: '🏆',
-    gradient: 'from-rose-400 to-pink-600',
-    lightBg: 'bg-rose-50',
-    border: 'border-rose-200',
-    badge: 'bg-rose-100 text-rose-700',
-  },
-];
+// Moved to src/stores/appStore.ts
 
 const EMPTY_FORM: VocabFormData = {
   word: '',
@@ -1138,24 +1059,27 @@ const Pagination = ({ currentPage, totalPages, onChange }: PaginationProps) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 const VocabularyPage = () => {
   const { isAdmin, user } = useAuth();
-  console.log('VocabularyPage: Auth state', { isAdmin, user });
   const navigate = useNavigate();
 
-  // Navigation
-  const [view, setView] = useState<View>('home');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  // Zustand Store
+  const {
+    view, setView,
+    searchQuery, setSearchQuery,
+    selectedCategoryId, setCategory,
+    selectedTopic, setTopic,
+    selectedLevel, setLevel,
+    resetSelections
+  } = useAppStore();
 
-  // Data
+  // Local Data State (specific to this page)
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [words, setWords] = useState<VocabItem[]>([]);
   const [loadingCounts, setLoadingCounts] = useState(false);
   const [loadingWords, setLoadingWords] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
-  // Topics
+  // Local Topics State
   const [topics, setTopics] = useState<TopicItem[]>([]);
   const [loadingTopics, setLoadingTopics] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState<TopicItem | null>(null);
   const [topicManageOpen, setTopicManageOpen] = useState(false);
 
   // Pagination
@@ -1165,20 +1089,17 @@ const VocabularyPage = () => {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  // Modal
+  // Modals Local State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingWord, setEditingWord] = useState<VocabItem | null>(null);
-
-  // Delete confirm
   const [deletingWord, setDeletingWord] = useState<VocabItem | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Grammar
+  // Grammar Local State
   const [grammarLevels, setGrammarLevels] = useState<GrammarLevel[]>([]);
   const [loadingGrammarLevels, setLoadingGrammarLevels] = useState(false);
   const [grammarTopics, setGrammarTopics] = useState<GrammarTopic[]>([]);
   const [loadingGrammarTopics, setLoadingGrammarTopics] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<GrammarLevel | null>(null);
   const [grammarTopicModalOpen, setGrammarTopicModalOpen] = useState(false);
   const [editingGrammarTopic, setEditingGrammarTopic] = useState<GrammarTopic | null>(null);
   const [grammarLevelModalOpen, setGrammarLevelModalOpen] = useState(false);
@@ -1194,7 +1115,7 @@ const VocabularyPage = () => {
   const pendingUploadTopicIdRef = useRef<string | null>(null);
 
   // ── Derived ──────────────────────────────────────────────────────────────────
-  const categories: Category[] = BASE_CATEGORIES.map((c) => ({
+  const categories: Category[] = CATEGORIES.map((c) => ({
     ...c,
     wordCount: categoryCounts[c.id] ?? 0,
   }));
@@ -1305,34 +1226,24 @@ const VocabularyPage = () => {
   }, [view, selectedLevel, fetchGrammarTopics]);
 
   // ── Navigation ────────────────────────────────────────────────────────────────
-  const goHome = () => { setView('home'); setSelectedCategoryId(''); setSearchQuery(''); setCurrentPage(1); setSelectedTopic(null); };
-  const goVocabulary = () => { setView('vocabulary'); setSelectedCategoryId(''); setSearchQuery(''); setCurrentPage(1); setSelectedTopic(null); };
+  const goHome = () => { resetSelections(); setView(VIEW_STATES.HOME); };
+  const goVocabulary = () => { resetSelections(); setView(VIEW_STATES.VOCABULARY); };
 
   const openCategory = (catId: string) => {
-    setSelectedCategoryId(catId);
-    setSearchQuery('');
+    setCategory(catId);
     setCurrentPage(1);
     setCompletedIds(new Set());
-    setSelectedTopic(null);
-    if (TOPIC_CATEGORIES.includes(catId)) {
-      setView('topic-list');
-    } else {
-      setView('vocab-list');
-    }
   };
 
   const openTopicVocabList = (topic: TopicItem) => {
-    setSelectedTopic(topic);
-    setView('topic-vocab-list');
-    setSearchQuery('');
+    setTopic(topic);
     setCurrentPage(1);
     setCompletedIds(new Set());
   };
 
-  const goGrammar = () => { setView('grammar'); setSelectedLevel(null); };
+  const goGrammar = () => { setLevel(null); setView(VIEW_STATES.GRAMMAR); };
   const openGrammarLevel = (level: GrammarLevel) => {
-    setSelectedLevel(level);
-    setView('grammar-topic-list');
+    setLevel(level);
     setExpandedGrammarTopicId(null);
   };
 
@@ -2057,8 +1968,8 @@ const VocabularyPage = () => {
     return renderWordList(selectedCategory, {
       label: selectedCategory.name,
       onClick: () => {
+        setTopic(null);
         setView('topic-list');
-        setSelectedTopic(null);
         setSearchQuery('');
         setCurrentPage(1);
       },

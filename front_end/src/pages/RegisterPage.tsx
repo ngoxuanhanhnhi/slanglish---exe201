@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +14,7 @@ import {
   HiOutlineEyeOff,
 } from 'react-icons/hi';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { useAppStore } from '../stores/appStore';
 
 const registerSchema = z
   .object({
@@ -39,12 +39,15 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 const RegisterPage = () => {
   const { register: registerUser, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('');
+
+  const {
+    authShowPassword: showPassword, authShowConfirmPassword: showConfirmPassword,
+    authLoading: isLoading, authIsGoogleLoading: isGoogleLoading,
+    regSelectedCountry: selectedCountry, regSelectedLevel: selectedLevel,
+    setAuthShowPassword: setShowPassword, setAuthShowConfirmPassword: setShowConfirmPassword,
+    setAuthLoading: setIsLoading, setAuthIsGoogleLoading: setIsGoogleLoading,
+    setRegSelectedCountry: setSelectedCountry, setRegSelectedLevel: setSelectedLevel
+  } = useAppStore();
 
   const {
     register,
@@ -92,8 +95,8 @@ const RegisterPage = () => {
   };
 
   return (
-    <AuthLayout 
-      title="Đăng ký tài khoản" 
+    <AuthLayout
+      title="Đăng ký tài khoản"
       subtitle="Bắt đầu hành trình học tiếng Anh cùng hàng triệu học viên"
     >
       {/* Google Sign Up */}

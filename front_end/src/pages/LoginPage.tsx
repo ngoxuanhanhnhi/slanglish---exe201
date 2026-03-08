@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,8 +7,8 @@ import { useAuth } from '../features/auth/AuthContext';
 import AuthLayout from '../components/layouts/AuthLayout';
 import { Button, Input } from '../components/ui';
 import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
-import { FaGoogle } from 'react-icons/fa';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { useAppStore } from '../stores/appStore';
 
 const loginSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
@@ -21,9 +20,11 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const LoginPage = () => {
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const {
+    authShowPassword: showPassword, authLoading: isLoading, authIsGoogleLoading: isGoogleLoading,
+    setAuthShowPassword: setShowPassword, setAuthLoading: setIsLoading, setAuthIsGoogleLoading: setIsGoogleLoading
+  } = useAppStore();
 
   const {
     register,
@@ -71,8 +72,8 @@ const LoginPage = () => {
   };
 
   return (
-    <AuthLayout 
-      title="Đăng nhập" 
+    <AuthLayout
+      title="Đăng nhập"
       subtitle="Đăng nhập để bắt đầu luyện thi cùng hàng trăm ngàn học viên"
     >
       {/* Google Login Button */}

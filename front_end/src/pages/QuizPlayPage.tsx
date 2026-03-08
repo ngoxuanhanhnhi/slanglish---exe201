@@ -9,31 +9,35 @@ import {
   HiOutlineExclamation,
 } from 'react-icons/hi';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { getQuiz, submitQuizResult, QuizDetail, QuizQuestion } from '../services/quiz.service';
-
-type Phase = 'quiz' | 'result' | 'blocked';
+import { getQuiz, submitQuizResult, QuizQuestion } from '../services/quiz.service';
+import { useAppStore } from '../stores/appStore';
 
 const QuizPlayPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [quiz, setQuiz] = useState<QuizDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [phase, setPhase] = useState<Phase>('quiz');
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [currentIdx, setCurrentIdx] = useState(0);
+  const {
+    activeQuiz: quiz, quizPhase: phase, quizAnswers: answers,
+    quizCurrentIdx: currentIdx, quizRemaining: remaining, quizElapsed: elapsed,
+    setActiveQuiz: setQuiz, setQuizPhase: setPhase, setQuizAnswer: setAnswer,
+    resetQuizAnswers, setQuizCurrentIdx: setCurrentIdx, setQuizTimer: setTimer
+  } = useAppStore();
+
+  const [loading, setLoading] = useState(!quiz);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ score: number; total: number } | null>(null);
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const submittedRef = useRef(false);
 
-  // Countdown timer: remaining seconds (null = no limit, counts up via elapsed)
-  const [remaining, setRemaining] = useState<number | null>(null);
-  const [elapsed, setElapsed] = useState(0);
-
   useEffect(() => {
     if (!id) return;
+    if (quiz?.id === id) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     getQuiz(id)
       .then((data) => {
         setQuiz(data);
@@ -44,35 +48,27 @@ const QuizPlayPage = () => {
         }
         // Set countdown if time_limit exists (stored in minutes)
         if (data.time_limit) {
-          setRemaining(data.time_limit * 60);
+          setTimer(data.time_limit * 60, 0);
+        } else {
+          setTimer(null, 0);
         }
       })
       .catch(() => { })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, quiz, setQuiz, setPhase, setTimer]);
 
   // Timer effect
   useEffect(() => {
     if (phase !== 'quiz' || !quiz) return;
     const interval = setInterval(() => {
-      setElapsed((e) => e + 1);
-      if (remaining !== null) {
-        setRemaining((r) => {
-          if (r === null) return null;
-          if (r <= 1) return 0;
-          return r - 1;
-        });
-      }
+      const nextRemaining = remaining !== null ? Math.max(0, remaining - 1) : null;
+      setTimer(nextRemaining, elapsed + 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [phase, quiz, remaining !== null]);
+  }, [phase, quiz, remaining, elapsed, setTimer]);
 
   const questions = useMemo(() => quiz?.questions || [], [quiz]);
   const current: QuizQuestion | undefined = questions[currentIdx];
-
-  const setAnswer = (questionId: string, value: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }));
-  };
 
   const handleSubmit = useCallback(async () => {
     if (!quiz || submittedRef.current) return;
@@ -87,7 +83,7 @@ const QuizPlayPage = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [quiz, answers, elapsed]);
+  }, [quiz, answers, elapsed, setPhase]);
 
   // Auto-submit when countdown reaches 0
   useEffect(() => {
@@ -314,8 +310,8 @@ const QuizPlayPage = () => {
                     key={opt}
                     onClick={() => setAnswer(current.id, opt)}
                     className={`w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all text-sm font-medium ${selected
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
                       }`}>
                     {opt}
                   </button>
@@ -333,8 +329,8 @@ const QuizPlayPage = () => {
                     key={val}
                     onClick={() => setAnswer(current.id, val)}
                     className={`flex-1 px-4 py-4 rounded-xl border-2 transition-all text-sm font-semibold ${selected
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
                       }`}>
                     {val}
                   </button>
@@ -358,7 +354,7 @@ const QuizPlayPage = () => {
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
+          onClick={() => setCurrentIdx(Math.max(0, currentIdx - 1))}
           disabled={currentIdx === 0}
           className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors text-sm disabled:opacity-40">
           ← Trước
@@ -371,10 +367,10 @@ const QuizPlayPage = () => {
               key={q.id}
               onClick={() => setCurrentIdx(idx)}
               className={`w-7 h-7 rounded-full text-xs font-medium transition-all ${idx === currentIdx
-                  ? 'bg-primary-600 text-white'
-                  : answers[q.id]
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                ? 'bg-primary-600 text-white'
+                : answers[q.id]
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}>
               {idx + 1}
             </button>
@@ -384,7 +380,7 @@ const QuizPlayPage = () => {
         <div className="flex gap-2">
           {currentIdx < questions.length - 1 && (
             <button
-              onClick={() => setCurrentIdx((i) => Math.min(questions.length - 1, i + 1))}
+              onClick={() => setCurrentIdx(Math.min(questions.length - 1, currentIdx + 1))}
               className="px-5 py-2.5 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors text-sm">
               Tiếp →
             </button>

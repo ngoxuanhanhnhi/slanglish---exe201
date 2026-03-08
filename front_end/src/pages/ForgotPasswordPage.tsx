@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { authService } from '../services/auth.service';
 import AuthLayout from '../components/layouts/AuthLayout';
 import { Button, Input } from '../components/ui';
+import { useAppStore } from '../stores/appStore';
 import {
   HiOutlineMail,
   HiOutlineCheckCircle,
@@ -16,7 +17,7 @@ import {
   HiOutlineEyeOff,
 } from 'react-icons/hi';
 
-// ─── Schemas ───────────────────────────────────────────────────────
+// --- (schemas same as before) ---
 const emailSchema = z.object({
   email: z
     .string()
@@ -50,18 +51,15 @@ const OTP_EXPIRY_SECONDS = 15 * 60; // 15 minutes
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
+  const {
+    authStep: step, authEmail: email, authResetToken: resetToken, authOtp: otp,
+    authCountdown: countdown, authCanResend: canResend, authLoading: isLoading,
+    setAuthStep: setStep, setAuthEmail: setEmail, setAuthResetToken: setResetToken,
+    setAuthOtp: setOtp, setAuthCountdown: setCountdown, setAuthCanResend: setCanResend,
+    setAuthLoading: setIsLoading
+  } = useAppStore();
 
-  // Steps: 1 = enter email, 2 = enter OTP, 3 = new password, 4 = success
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [resetToken, setResetToken] = useState('');
-
-  // OTP state
-  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [countdown, setCountdown] = useState(OTP_EXPIRY_SECONDS);
-  const [canResend, setCanResend] = useState(false);
 
   // Password visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -94,11 +92,11 @@ const ForgotPasswordPage = () => {
     }
 
     const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
+      setCountdown(countdown - 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [step, countdown]);
+  }, [step, countdown, setCountdown, setCanResend]);
 
   const formatCountdown = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -214,6 +212,7 @@ const ForgotPasswordPage = () => {
       setIsLoading(false);
     }
   };
+
 
   // ═══════════════════════════════════════════════════════════════
   // STEP 4: Success

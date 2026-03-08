@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext';
+import { useAppStore, VIEW_STATES } from '../../stores/appStore';
 import {
   HiOutlineHome,
   HiOutlineBookOpen,
@@ -25,22 +26,30 @@ const getAvatarUrl = (avatar?: string | null) => {
 
 const MainLayout = () => {
   const { user, logout } = useAuth();
+  const { view, setView, resetSelections } = useAppStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigation = [
-    { name: 'Trang chủ', href: '/dashboard', icon: HiOutlineHome },
-    { name: 'Từ vựng & Ngữ pháp', href: '/vocabulary', icon: HiOutlineBookOpen },
-    { name: 'Bài học', href: '/lessons', icon: HiOutlineAcademicCap },
-    { name: 'Luyện tập', href: '/quiz', icon: HiOutlineClipboardList },
-    { name: 'Hồ sơ', href: '/profile', icon: HiOutlineUser },
-    { name: 'Cài đặt', href: '/settings', icon: HiOutlineCog },
+    { name: 'Trang chủ', view: VIEW_STATES.HOME, icon: HiOutlineHome, href: '/dashboard' },
+    { name: 'Từ vựng & Ngữ pháp', view: VIEW_STATES.VOCABULARY, icon: HiOutlineBookOpen, href: '/vocabulary' },
+    { name: 'Bài học', view: VIEW_STATES.LESSONS, icon: HiOutlineAcademicCap, href: '/lessons' },
+    { name: 'Luyện tập', view: VIEW_STATES.QUIZ_LIST, icon: HiOutlineClipboardList, href: '/quiz' },
+    { name: 'Hồ sơ', view: VIEW_STATES.PROFILE, icon: HiOutlineUser, href: '/profile' },
+    { name: 'Cài đặt', view: VIEW_STATES.SETTINGS, icon: HiOutlineCog, href: '/settings' },
   ];
 
   const handleLogout = async () => {
     await logout();
+    setView(VIEW_STATES.LOGIN);
     navigate('/login');
+  };
+
+  const navigateTo = (targetView: any) => {
+    resetSelections();
+    setView(targetView);
+    setSidebarOpen(false);
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -58,12 +67,15 @@ const MainLayout = () => {
               >
                 <HiOutlineMenu className="w-6 h-6 text-gray-600" />
               </button>
-              <Link to="/dashboard" className="flex items-center space-x-2">
+              <button
+                onClick={() => navigateTo(VIEW_STATES.HOME)}
+                className="flex items-center space-x-2"
+              >
                 <div className="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">S</span>
                 </div>
                 <span className="text-xl font-bold text-primary-600 hidden sm:block">Slanglish</span>
-              </Link>
+              </button>
             </div>
 
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -83,7 +95,10 @@ const MainLayout = () => {
                 <span className="hidden md:block text-sm font-medium text-gray-700">
                   {user?.name || 'User'}
                 </span>
-                <Link to="/profile" className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                <button
+                  onClick={() => navigateTo(VIEW_STATES.PROFILE)}
+                  className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                >
                   <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden border border-primary-200">
                     {user?.avatar ? (
                       <img src={getAvatarUrl(user.avatar) || ''} alt="" className="w-full h-full object-cover" />
@@ -93,7 +108,7 @@ const MainLayout = () => {
                       </span>
                     )}
                   </div>
-                </Link>
+                </button>
               </div>
             </div>
           </div>
@@ -108,17 +123,17 @@ const MainLayout = () => {
               const Icon = item.icon;
               const active = isActive(item.href);
               return (
-                <Link
+                <button
                   key={item.name}
-                  to={item.href}
-                  className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${active
+                  onClick={() => navigateTo(item.view)}
+                  className={`flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 ${active
                     ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <Icon className={`w-5 h-5 mr-3 ${active ? 'text-primary-600' : 'text-gray-400'}`} />
                   {item.name}
-                </Link>
+                </button>
               );
             })}
           </nav>
@@ -143,12 +158,15 @@ const MainLayout = () => {
         <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-              <Link to="/dashboard" className="flex items-center space-x-2">
+              <button
+                onClick={() => navigateTo(VIEW_STATES.HOME)}
+                className="flex items-center space-x-2"
+              >
                 <div className="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">S</span>
                 </div>
                 <span className="text-xl font-bold text-primary-600">Slanglish</span>
-              </Link>
+              </button>
               <button className="p-2 rounded-lg hover:bg-gray-100" onClick={() => setSidebarOpen(false)}>
                 <HiOutlineX className="w-6 h-6 text-gray-500" />
               </button>
@@ -158,10 +176,14 @@ const MainLayout = () => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (
-                  <Link key={item.name} to={item.href} className={`flex items-center px-4 py-3 rounded-lg ${active ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600'}`} onClick={() => setSidebarOpen(false)}>
+                  <button
+                    key={item.name}
+                    onClick={() => navigateTo(item.view)}
+                    className={`flex items-center w-full px-4 py-3 rounded-lg ${active ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600'}`}
+                  >
                     <Icon className="w-5 h-5 mr-3" />
                     {item.name}
-                  </Link>
+                  </button>
                 );
               })}
             </nav>

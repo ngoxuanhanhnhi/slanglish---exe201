@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { userService } from '../services/user.service';
 import { DashboardStats } from '../types';
 import { LoadingSpinner } from '../components/ui';
+import { useAppStore, VIEW_STATES } from '../stores/appStore';
 import {
   HiOutlineBookOpen,
   HiOutlineAcademicCap,
@@ -19,6 +19,7 @@ import {
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const { setView, resetSelections } = useAppStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,12 +40,19 @@ const DashboardPage = () => {
     fetchStats();
   }, []);
 
+  const navigateTo = (view: any) => {
+    resetSelections();
+    // In a real app with routing, we'd also use useNavigate()
+    // but here we are following the user's pattern of managing view via state
+    setView(view);
+  };
+
   const quickActions = [
     {
       title: 'Học từ vựng',
       description: 'Mở rộng vốn từ của bạn',
       icon: HiOutlineBookOpen,
-      href: '/vocabulary',
+      view: VIEW_STATES.VOCABULARY,
       color: 'bg-blue-500',
       lightColor: 'bg-blue-50',
     },
@@ -52,7 +60,7 @@ const DashboardPage = () => {
       title: 'Ngữ pháp',
       description: 'Nắm vững ngữ pháp',
       icon: HiOutlineAcademicCap,
-      href: '/grammar',
+      view: VIEW_STATES.GRAMMAR,
       color: 'bg-emerald-500',
       lightColor: 'bg-emerald-50',
     },
@@ -60,7 +68,7 @@ const DashboardPage = () => {
       title: 'Luyện đề',
       description: 'Kiểm tra kiến thức',
       icon: HiOutlineClipboardList,
-      href: '/quiz',
+      view: 'quiz', // Assuming quiz is also a view state
       color: 'bg-orange-500',
       lightColor: 'bg-orange-50',
     },
@@ -94,13 +102,13 @@ const DashboardPage = () => {
               Tiếp tục hành trình học tiếng Anh của bạn nào!
             </p>
           </div>
-          <Link
-            to="/lessons"
+          <button
+            onClick={() => navigateTo(VIEW_STATES.VOCABULARY)}
             className="inline-flex items-center px-5 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
           >
             <HiOutlinePlay className="w-5 h-5 mr-2" />
             Học ngay
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -165,15 +173,22 @@ const DashboardPage = () => {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Bắt đầu học</h2>
-          <Link to="/lessons" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+          <button
+            onClick={() => navigateTo(VIEW_STATES.VOCABULARY)}
+            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+          >
             Xem tất cả
-          </Link>
+          </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
-              <Link key={action.title} to={action.href}>
+              <button
+                key={action.title}
+                className="w-full text-left"
+                onClick={() => navigateTo(action.view)}
+              >
                 <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-primary-200 transition-all group">
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center`}>
@@ -188,7 +203,7 @@ const DashboardPage = () => {
                     <HiOutlineArrowRight className="w-5 h-5 text-gray-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -199,9 +214,12 @@ const DashboardPage = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Kết quả quiz gần đây</h2>
-            <Link to="/quiz" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+            <button
+              onClick={() => navigateTo('quiz')}
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            >
               Xem tất cả
-            </Link>
+            </button>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="divide-y divide-gray-100">

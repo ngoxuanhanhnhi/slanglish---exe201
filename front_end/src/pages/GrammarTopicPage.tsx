@@ -1,5 +1,4 @@
-﻿import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+﻿import React, { useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import {
   HiOutlineChevronLeft,
@@ -8,9 +7,10 @@ import {
   HiOutlineExclamationCircle,
   HiOutlineBookOpen,
 } from 'react-icons/hi';
-import { getGrammarTopic, GrammarTopicDetail } from '../services/vocabulary.service';
+import { getGrammarTopic } from '../services/vocabulary.service';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../features/auth/AuthContext';
+import { useAppStore } from '../stores/appStore';
 
 const API_BASE =
   import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
@@ -18,24 +18,29 @@ const API_BASE =
 const stripTimestampPrefix = (filename: string) => filename.replace(/^\d+-/, '');
 
 const GrammarTopicPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { isAdmin } = useAuth();
-
-  const [topic, setTopic] = useState<GrammarTopicDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const {
+    selectedGrammarTopic,
+    grammarTopicDetail,
+    grammarLoading,
+    grammarError,
+    setGrammarTopicDetail,
+    setGrammarLoading,
+    setGrammarError,
+    goBack
+  } = useAppStore();
 
   useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    getGrammarTopic(id)
-      .then(setTopic)
-      .catch(() => setError('Không tải được nội dung chủ điểm. Vui lòng thử lại.'))
-      .finally(() => setLoading(false));
-  }, [id]);
+    if (!selectedGrammarTopic?.id) return;
 
-  if (loading) {
+    setGrammarLoading(true);
+    getGrammarTopic(selectedGrammarTopic.id)
+      .then(setGrammarTopicDetail)
+      .catch(() => setGrammarError('Không tải được nội dung chủ điểm. Vui lòng thử lại.'))
+      .finally(() => setGrammarLoading(false));
+  }, [selectedGrammarTopic, setGrammarTopicDetail, setGrammarLoading, setGrammarError]);
+
+  if (grammarLoading) {
     return (
       <div className="flex items-center justify-center py-24">
         <LoadingSpinner size="lg" />
@@ -43,15 +48,15 @@ const GrammarTopicPage = () => {
     );
   }
 
-  if (error || !topic) {
+  if (grammarError || !grammarTopicDetail) {
     return (
       <div className="max-w-2xl mx-auto py-16 text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-4">
           <HiOutlineExclamationCircle className="w-8 h-8 text-red-400" />
         </div>
-        <p className="text-gray-500">{error || 'Không tìm thấy chủ điểm ngữ pháp.'}</p>
+        <p className="text-gray-500">{grammarError || 'Không tìm thấy chủ điểm ngữ pháp.'}</p>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => goBack()}
           className="mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium">
           ← Quay lại
         </button>
@@ -59,17 +64,17 @@ const GrammarTopicPage = () => {
     );
   }
 
-  const hasFile = !!topic.content?.startsWith('/uploads/grammar/');
-  const hasHtml = !!topic.content_html;
-  const fileUrl = hasFile ? `${API_BASE}${topic.content}` : null;
-  const storedFileName = hasFile ? topic.content!.split('/').pop()! : null;
+  const hasFile = !!grammarTopicDetail.content?.startsWith('/uploads/grammar/');
+  const hasHtml = !!grammarTopicDetail.content_html;
+  const fileUrl = hasFile ? `${API_BASE}${grammarTopicDetail.content}` : null;
+  const storedFileName = hasFile ? grammarTopicDetail.content!.split('/').pop()! : null;
   const displayFileName = storedFileName ? stripTimestampPrefix(storedFileName) : null;
 
   const safeHtml = hasHtml
-    ? DOMPurify.sanitize(topic.content_html!, {
-        ADD_TAGS: ['img'],
-        ADD_ATTR: ['src', 'alt', 'width', 'height', 'style'],
-      })
+    ? DOMPurify.sanitize(grammarTopicDetail.content_html!, {
+      ADD_TAGS: ['img'],
+      ADD_ATTR: ['src', 'alt', 'width', 'height', 'style'],
+    })
     : '';
 
   return (
@@ -78,7 +83,7 @@ const GrammarTopicPage = () => {
       <div className="sticky top-16 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3">
         <div className="max-w-5xl mx-auto flex items-center gap-2 text-sm">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => goBack()}
             className="flex items-center gap-1 text-gray-500 hover:text-primary-600 transition-colors font-medium">
             <HiOutlineChevronLeft className="w-4 h-4" />
             Quay lại
@@ -86,9 +91,9 @@ const GrammarTopicPage = () => {
           <span className="text-gray-300">/</span>
           <span className="text-gray-400">Ngữ pháp</span>
           <span className="text-gray-300">/</span>
-          <span className="text-gray-400 truncate max-w-[120px]">{topic.level.name}</span>
+          <span className="text-gray-400 truncate max-w-[120px]">{grammarTopicDetail.level.name}</span>
           <span className="text-gray-300">/</span>
-          <span className="text-gray-700 font-medium truncate max-w-[220px]">{topic.name}</span>
+          <span className="text-gray-700 font-medium truncate max-w-[220px]">{grammarTopicDetail.name}</span>
         </div>
       </div>
 
@@ -100,11 +105,11 @@ const GrammarTopicPage = () => {
           </div>
           <div className="flex-1 min-w-0">
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary-50 text-primary-600">
-              {topic.level.name}
+              {grammarTopicDetail.level.name}
             </span>
-            <h1 className="text-2xl font-bold text-gray-900 leading-snug mt-1.5">{topic.name}</h1>
-            {topic.description && (
-              <p className="text-sm text-gray-500 mt-1">{topic.description}</p>
+            <h1 className="text-2xl font-bold text-gray-900 leading-snug mt-1.5">{grammarTopicDetail.name}</h1>
+            {grammarTopicDetail.description && (
+              <p className="text-sm text-gray-500 mt-1">{grammarTopicDetail.description}</p>
             )}
           </div>
           {isAdmin && hasFile && displayFileName && (

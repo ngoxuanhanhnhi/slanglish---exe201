@@ -90,7 +90,7 @@ const mockLessons = [
 
 const LessonsPage = () => {
   const { isAdmin } = useAuth();
-  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
+  const { lessonsDifficulty, setLessonsDifficulty } = useAppStore();
 
   const difficulties = [
     { key: 'all', label: 'Tất cả' },
@@ -101,7 +101,7 @@ const LessonsPage = () => {
 
   const filteredLessons = mockLessons.filter(
     (lesson) =>
-      selectedDifficulty === 'all' || lesson.difficulty === selectedDifficulty
+      lessonsDifficulty === 'all' || lesson.difficulty === lessonsDifficulty
   );
 
   const getDifficultyConfig = (difficulty: string) => {
@@ -177,11 +177,10 @@ const LessonsPage = () => {
           <button
             key={diff.key}
             onClick={() => setSelectedDifficulty(diff.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              selectedDifficulty === diff.key
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedDifficulty === diff.key
                 ? 'bg-primary-600 text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-            }`}
+              }`}
           >
             {diff.label}
           </button>
@@ -195,24 +194,22 @@ const LessonsPage = () => {
           return (
             <div
               key={lesson.id}
-              className={`bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all group ${
-                lesson.locked ? 'opacity-70' : 'hover:border-primary-200'
-              }`}
+              className={`bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all group ${lesson.locked ? 'opacity-70' : 'hover:border-primary-200'
+                }`}
             >
               {/* Card Header with Status */}
               <div className={`h-2 ${lesson.completed ? 'bg-green-500' : lesson.locked ? 'bg-gray-300' : 'bg-primary-500'}`} />
-              
+
               <div className="p-5">
                 {/* Status Icon & Badge */}
                 <div className="flex items-start justify-between mb-4">
                   <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      lesson.completed
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${lesson.completed
                         ? 'bg-green-100'
                         : lesson.locked
-                        ? 'bg-gray-100'
-                        : 'bg-primary-100'
-                    }`}
+                          ? 'bg-gray-100'
+                          : 'bg-primary-100'
+                      }`}
                   >
                     {lesson.completed ? (
                       <HiOutlineCheckCircle className="w-6 h-6 text-green-600" />

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,6 +22,7 @@ import {
   HiOutlineCheck,
   HiOutlineGlobeAlt,
 } from 'react-icons/hi';
+import { useAppStore } from '../stores/appStore';
 
 const LEVEL_LABELS: Record<string, string> = {
   beginner: 'Beginner',
@@ -59,20 +60,30 @@ const API_BASE = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http:/
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuth();
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState(user?.country || '');
-  const [selectedLevel, setSelectedLevel] = useState(user?.english_level || '');
+  const {
+    profileIsEditing: isEditingProfile, profileIsUpdating: isUpdatingProfile,
+    profileIsPasswordOpen: isPasswordOpen, profileIsChangingPassword: isChangingPassword,
+    profileShowCurrentPassword: showCurrentPassword, profileShowNewPassword: showNewPassword,
+    profileSelectedCountry: selectedCountry, profileSelectedLevel: selectedLevel,
+    profileAvatarPreview: avatarPreview, profileAvatarFile: avatarFile,
+    profileIsUploadingAvatar: isUploadingAvatar,
+    setProfileIsEditing: setIsEditingProfile, setProfileIsUpdating: setIsUpdatingProfile,
+    setProfileIsPasswordOpen: setIsPasswordOpen, setProfileIsChangingPassword: setIsChangingPassword,
+    setProfileShowCurrentPassword: setShowCurrentPassword, setProfileShowNewPassword: setShowNewPassword,
+    setProfileSelectedCountry: setSelectedCountry, setProfileSelectedLevel: setSelectedLevel,
+    setProfileAvatarPreview: setAvatarPreview, setProfileAvatarFile: setAvatarFile,
+    setProfileIsUploadingAvatar: setIsUploadingAvatar
+  } = useAppStore();
+
+  useEffect(() => {
+    if (user) {
+      if (!selectedCountry) setSelectedCountry(user.country || '');
+      if (!selectedLevel) setSelectedLevel(user.english_level || '');
+    }
+  }, [user, selectedCountry, selectedLevel, setSelectedCountry, setSelectedLevel]);
 
   // Avatar upload
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const {
     register: registerProfile,

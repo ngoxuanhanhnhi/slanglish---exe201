@@ -1,32 +1,34 @@
-import { Link } from 'react-router-dom';
 import { HiOutlineBookOpen, HiOutlineAcademicCap, HiOutlineLightningBolt, HiOutlineChartBar, HiOutlineGlobe, HiOutlineUserGroup } from 'react-icons/hi';
+import { useAppStore } from '../stores/appStore';
 
 const WelcomePage = () => {
+  const { setView } = useAppStore();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
+            <button onClick={() => setView('home')} className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center">
                 <HiOutlineBookOpen className="w-6 h-6 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-900">Slanglish</span>
-            </Link>
+            </button>
             <div className="flex items-center gap-3">
-              <Link
-                to="/login"
+              <button
+                onClick={() => setView('login')}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
               >
                 Đăng nhập
-              </Link>
-              <Link
-                to="/register"
+              </button>
+              <button
+                onClick={() => setView('register')}
                 className="px-5 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
               >
                 Đăng ký miễn phí
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -49,24 +51,24 @@ const WelcomePage = () => {
             </h1>
 
             <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              Luyện thi IELTS, TOEIC, TOEFL với hệ thống bài học thông minh, 
+              Luyện thi IELTS, TOEIC, TOEFL với hệ thống bài học thông minh,
               bài kiểm tra đa dạng và theo dõi tiến độ chi tiết.
             </p>
 
             {/* CTA Buttons */}
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/register"
+              <button
+                onClick={() => setView('register')}
                 className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 hover:shadow-xl hover:shadow-primary-300"
               >
                 Bắt đầu học miễn phí
-              </Link>
-              <Link
-                to="/login"
+              </button>
+              <button
+                onClick={() => setView('login')}
                 className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-gray-700 bg-white rounded-xl hover:bg-gray-50 transition-all border border-gray-200 shadow-sm"
               >
                 Đã có tài khoản? Đăng nhập
-              </Link>
+              </button>
             </div>
 
             {/* Stats */}
@@ -184,12 +186,12 @@ const WelcomePage = () => {
             Đăng ký ngay hôm nay và bắt đầu hành trình học tiếng Anh hiệu quả cùng Slanglish
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/register"
+            <button
+              onClick={() => setView('register')}
               className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-primary-600 bg-white rounded-xl hover:bg-gray-50 transition-all shadow-lg"
             >
               Đăng ký miễn phí ngay
-            </Link>
+            </button>
           </div>
         </div>
       </section>
@@ -205,8 +207,8 @@ const WelcomePage = () => {
               <span className="text-lg font-bold text-white">Slanglish</span>
             </div>
             <div className="flex items-center gap-6 text-sm">
-              <Link to="/terms" className="hover:text-white transition-colors">Điều khoản</Link>
-              <Link to="/privacy" className="hover:text-white transition-colors">Bảo mật</Link>
+              <button onClick={() => setView('home')} className="hover:text-white transition-colors">Điều khoản</button>
+              <button onClick={() => setView('home')} className="hover:text-white transition-colors">Bảo mật</button>
               <span>© 2024 Slanglish</span>
             </div>
           </div>
