@@ -12,6 +12,8 @@ services:
       MSSQL_PID: "Express"
     volumes:
       - sql_data:/var/opt/mssql
+    ports:
+      - "1433:1433"
     networks:
       - english_app_network
     healthcheck:
@@ -33,7 +35,7 @@ services:
       JWT__Key: "your-super-secret-jwt-key-at-least-32-chars-long-12345678"
       JWT__Issuer: "EnglishApp"
       JWT__Audience: "EnglishAppUsers"
-      FrontendUrl: "http://localhost"
+      FrontendUrl: "http://localhost:3000"
     ports:
       - "5000:5000"
     depends_on:
@@ -50,7 +52,7 @@ services:
     container_name: english_app_frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "3000:3000"
     depends_on:
       - backend
     networks:

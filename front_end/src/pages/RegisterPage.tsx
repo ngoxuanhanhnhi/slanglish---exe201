@@ -62,7 +62,7 @@ const RegisterPage = () => {
     try {
       await registerUser(data.email, data.password, data.name, selectedCountry || undefined, selectedLevel || undefined);
       toast.success('Đăng ký thành công! Vui lòng xác thực email.');
-      navigate('/verify-otp');
+      navigate('/verify-otp', { replace: true });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
@@ -81,7 +81,7 @@ const RegisterPage = () => {
     try {
       await loginWithGoogle(credentialResponse.credential);
       toast.success('Đăng ký với Google thành công!');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'Đăng ký với Google thất bại');

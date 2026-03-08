@@ -57,7 +57,7 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const WORDS_PER_PAGE = 10;
-const API_BASE = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+
 const TOPIC_CATEGORIES = ['a1', 'a2', 'b1', 'b2', 'c1', 'c2'];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1108,7 +1108,6 @@ const VocabularyPage = () => {
   const [deletingGrammarTopicLoading, setDeletingGrammarTopicLoading] = useState(false);
   const [deletingGrammarLevel, setDeletingGrammarLevel] = useState<GrammarLevel | null>(null);
   const [deletingGrammarLevelLoading, setDeletingGrammarLevelLoading] = useState(false);
-  const [expandedGrammarTopicId, setExpandedGrammarTopicId] = useState<string | null>(null);
   const [uploadingTopicId, setUploadingTopicId] = useState<string | null>(null);
   const [deletingFileTopicId, setDeletingFileTopicId] = useState<string | null>(null);
   const grammarFileInputRef = useRef<HTMLInputElement>(null);
@@ -1226,8 +1225,9 @@ const VocabularyPage = () => {
   }, [view, selectedLevel, fetchGrammarTopics]);
 
   // ── Navigation ────────────────────────────────────────────────────────────────
-  const goHome = () => { resetSelections(); setView(VIEW_STATES.HOME); };
-  const goVocabulary = () => { resetSelections(); setView(VIEW_STATES.VOCABULARY); };
+
+  const goRoot = () => { resetSelections(); setView(VIEW_STATES.VOCABULARY); };
+  const goVocabulary = () => { resetSelections(); setView(VIEW_STATES.VOCAB_CATEGORIES); };
 
   const openCategory = (catId: string) => {
     setCategory(catId);
@@ -1244,7 +1244,7 @@ const VocabularyPage = () => {
   const goGrammar = () => { setLevel(null); setView(VIEW_STATES.GRAMMAR); };
   const openGrammarLevel = (level: GrammarLevel) => {
     setLevel(level);
-    setExpandedGrammarTopicId(null);
+    // setExpandedGrammarTopicId(null);
   };
 
   // ── Grammar CRUD handlers ──────────────────────────────────────────────────
@@ -1433,7 +1433,7 @@ const VocabularyPage = () => {
         <div className="space-y-5">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
-            <button onClick={goHome} className="hover:text-primary-600 transition-colors">
+            <button onClick={goRoot} className="hover:text-primary-600 transition-colors">
               Từ vựng &amp; Ngữ pháp
             </button>
             <HiOutlineChevronRight className="w-4 h-4" />
@@ -1741,10 +1741,11 @@ const VocabularyPage = () => {
     );
   };
 
+
   // ═══════════════════════════════════════════════════════════════════════════════
-  // ── Home View ──────────────────────────────────────────────────────────────────
+  // ── Home View (Selection Screen) ────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════════════════
-  if (view === 'home') {
+  if (view === 'vocabulary') {
     return (
       <div className="space-y-8">
         <div>
@@ -1772,7 +1773,7 @@ const VocabularyPage = () => {
               </div>
             </div>
           </button>
-          <button onClick={() => setView('grammar')}
+          <button onClick={goGrammar}
             className="group relative bg-white rounded-2xl border-2 border-emerald-100 hover:border-emerald-400 shadow-sm hover:shadow-lg transition-all duration-300 text-left overflow-hidden">
             <div className="h-2 bg-gradient-to-r from-emerald-400 to-teal-500 w-full" />
             <div className="p-8">
@@ -1800,20 +1801,26 @@ const VocabularyPage = () => {
   // ═══════════════════════════════════════════════════════════════════════════════
   // ── Vocabulary Category Grid ───────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════════════════
-  if (view === 'vocabulary') {
+  if (view === 'vocab-categories') {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <button onClick={goHome} className="hover:text-primary-600 transition-colors">
+          <button onClick={goRoot} className="hover:text-primary-600 transition-colors">
             Từ vựng &amp; Ngữ pháp
           </button>
           <HiOutlineChevronRight className="w-4 h-4" />
           <span className="font-medium text-gray-900">Từ vựng</span>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Từ vựng</h1>
-            <p className="text-gray-500">Chọn danh mục từ vựng bạn muốn học</p>
+          <div className="flex items-center gap-3">
+            <button onClick={goRoot}
+              className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
+              <HiOutlineChevronLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Từ vựng</h1>
+              <p className="text-gray-500">Chọn danh mục từ vựng bạn muốn học</p>
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -1862,7 +1869,7 @@ const VocabularyPage = () => {
 
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <button onClick={goHome} className="hover:text-primary-600 transition-colors">
+            <button onClick={goRoot} className="hover:text-primary-600 transition-colors">
               Từ vựng &amp; Ngữ pháp
             </button>
             <HiOutlineChevronRight className="w-4 h-4" />
@@ -1997,7 +2004,7 @@ const VocabularyPage = () => {
         />
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <button onClick={goHome} className="hover:text-primary-600 transition-colors">
+            <button onClick={goRoot} className="hover:text-primary-600 transition-colors">
               Từ vựng &amp; Ngữ pháp
             </button>
             <HiOutlineChevronRight className="w-4 h-4" />
@@ -2113,7 +2120,7 @@ const VocabularyPage = () => {
         />
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <button onClick={goHome} className="hover:text-primary-600 transition-colors">
+            <button onClick={goRoot} className="hover:text-primary-600 transition-colors">
               Từ vựng &amp; Ngữ pháp
             </button>
             <HiOutlineChevronRight className="w-4 h-4" />
@@ -2187,7 +2194,6 @@ const VocabularyPage = () => {
                 const storedFileName = hasFile ? topic.content!.split('/').pop()! : null;
                 // Strip timestamp prefix (e.g. "1234567890-MyFile.pdf" → "MyFile.pdf")
                 const displayFileName = storedFileName ? storedFileName.replace(/^\d+-/, '') : null;
-                const fileUrl = hasFile ? `${API_BASE}${topic.content}` : null;
                 const isUploading = uploadingTopicId === topic.id;
                 const isDeletingFile = deletingFileTopicId === topic.id;
                 return (

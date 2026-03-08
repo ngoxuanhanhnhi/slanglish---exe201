@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { Button } from '../components/ui';
 import { useAuth } from '../features/auth/AuthContext';
+import { useAppStore } from '../stores/appStore';
 import {
   HiOutlineAcademicCap,
   HiOutlinePlay,
@@ -90,7 +90,7 @@ const mockLessons = [
 
 const LessonsPage = () => {
   const { isAdmin } = useAuth();
-  const { lessonsDifficulty, setLessonsDifficulty } = useAppStore();
+  const { lessonsDifficulty, setLessonsDifficulty: setSelectedDifficulty } = useAppStore();
 
   const difficulties = [
     { key: 'all', label: 'Tất cả' },
@@ -177,9 +177,9 @@ const LessonsPage = () => {
           <button
             key={diff.key}
             onClick={() => setSelectedDifficulty(diff.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedDifficulty === diff.key
-                ? 'bg-primary-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${lessonsDifficulty === diff.key
+              ? 'bg-primary-600 text-white'
+              : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
           >
             {diff.label}
@@ -205,10 +205,10 @@ const LessonsPage = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div
                     className={`w-12 h-12 rounded-xl flex items-center justify-center ${lesson.completed
-                        ? 'bg-green-100'
-                        : lesson.locked
-                          ? 'bg-gray-100'
-                          : 'bg-primary-100'
+                      ? 'bg-green-100'
+                      : lesson.locked
+                        ? 'bg-gray-100'
+                        : 'bg-primary-100'
                       }`}
                   >
                     {lesson.completed ? (
@@ -252,7 +252,7 @@ const LessonsPage = () => {
                     Ôn tập
                   </Button>
                 ) : lesson.locked ? (
-                  <Button variant="secondary" size="sm" className="w-full" disabled>
+                  <Button variant="secondary" size="sm" className="w-full opacity-50 cursor-not-allowed">
                     <HiOutlineLockClosed className="w-4 h-4 mr-2" />
                     Chưa mở khóa
                   </Button>

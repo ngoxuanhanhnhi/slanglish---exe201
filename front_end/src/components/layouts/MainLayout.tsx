@@ -26,7 +26,7 @@ const getAvatarUrl = (avatar?: string | null) => {
 
 const MainLayout = () => {
   const { user, logout } = useAuth();
-  const { view, setView, resetSelections } = useAppStore();
+  const { setView, resetSelections } = useAppStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,9 +46,9 @@ const MainLayout = () => {
     navigate('/login');
   };
 
-  const navigateTo = (targetView: any) => {
+  const navigateTo = (path: string) => {
     resetSelections();
-    setView(targetView);
+    navigate(path);
     setSidebarOpen(false);
   };
 
@@ -68,7 +68,7 @@ const MainLayout = () => {
                 <HiOutlineMenu className="w-6 h-6 text-gray-600" />
               </button>
               <button
-                onClick={() => navigateTo(VIEW_STATES.HOME)}
+                onClick={() => navigateTo('/dashboard')}
                 className="flex items-center space-x-2"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center">
@@ -96,7 +96,7 @@ const MainLayout = () => {
                   {user?.name || 'User'}
                 </span>
                 <button
-                  onClick={() => navigateTo(VIEW_STATES.PROFILE)}
+                  onClick={() => navigateTo('/profile')}
                   className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
                 >
                   <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden border border-primary-200">
@@ -125,7 +125,7 @@ const MainLayout = () => {
               return (
                 <button
                   key={item.name}
-                  onClick={() => navigateTo(item.view)}
+                  onClick={() => navigateTo(item.href)}
                   className={`flex items-center w-full px-4 py-3 rounded-xl transition-all duration-200 ${active
                     ? 'bg-primary-50 text-primary-700 font-semibold shadow-sm'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -159,7 +159,7 @@ const MainLayout = () => {
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
               <button
-                onClick={() => navigateTo(VIEW_STATES.HOME)}
+                onClick={() => navigateTo('/dashboard')}
                 className="flex items-center space-x-2"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center">
@@ -178,7 +178,7 @@ const MainLayout = () => {
                 return (
                   <button
                     key={item.name}
-                    onClick={() => navigateTo(item.view)}
+                    onClick={() => navigateTo(item.href)}
                     className={`flex items-center w-full px-4 py-3 rounded-lg ${active ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600'}`}
                   >
                     <Icon className="w-5 h-5 mr-3" />

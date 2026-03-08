@@ -1,6 +1,9 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { TopicItem, GrammarLevel, GrammarTopic } from '../services/vocabulary.service';
 import { QuizCategory, QuizListItem, QuizDetail } from '../services/quiz.service';
+import { User } from '../types/auth.types';
+import { authService } from '../services/auth.service';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 export const VIEW_STATES = {
@@ -15,6 +18,7 @@ export const VIEW_STATES = {
     SETTINGS: 'settings',
     LESSONS: 'lessons',
     VOCABULARY: 'vocabulary',
+    VOCAB_CATEGORIES: 'vocab-categories',
     GRAMMAR: 'grammar',
     GRAMMAR_TOPIC_LIST: 'grammar-topic-list',
     GRAMMAR_TOPIC_DETAIL: 'grammar-topic-detail',
@@ -113,6 +117,9 @@ interface AppState {
     // Navigation State
     view: View;
     history: View[];
+    isInitialized: boolean;
+    user: User | null;
+    token: string | null;
 
     // Selection State
     searchQuery: string;
@@ -130,6 +137,13 @@ interface AppState {
     setLevel: (level: GrammarLevel | null) => void;
     setGrammarTopic: (topic: GrammarTopic | null) => void;
     resetSelections: () => void;
+
+    // Auth Core Actions
+    setUser: (user: User | null) => void;
+    setToken: (token: string | null) => void;
+    setInitialized: (isInitialized: boolean) => void;
+    logout: () => Promise<void>;
+    initializeAuth: () => Promise<void>;
 
     // --- Auth State ---
     authStep: 1 | 2 | 3 | 4;
@@ -239,10 +253,13 @@ interface AppState {
     setResetPassSuccess: (success: boolean) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>()(persist((set) => ({
     // Initial UI State
     view: VIEW_STATES.WELCOME,
     history: [],
+    isInitialized: false,
+    user: null,
+    token: null,
     searchQuery: '',
     selectedCategoryId: 'slang',
     selectedTopic: null,
@@ -351,6 +368,43 @@ export const useAppStore = create<AppState>((set) => ({
         selectedGrammarTopic: null
     }),
 
+    // Auth Core Actions
+    setUser: (user: User | null) => set({ user }),
+    setToken: (token: string | null) => set({ token }),
+    setInitialized: (isInitialized: boolean) => set({ isInitialized }),
+    logout: async () => {
+        try {
+            await authService.logout();
+        } catch (e) { /* ignore */ }
+        set({ user: null, token: null, view: VIEW_STATES.WELCOME, history: [] });
+    },
+    initializeAuth: async () => {
+        const state = useAppStore.getState();
+
+        // If no token, we're definitely unauthenticated
+        if (!state.token) {
+            set({ user: null, isInitialized: true });
+            return;
+        }
+
+        // Optimistically treat the stored session as valid so the UI doesn't flicker
+        set({ isInitialized: true });
+
+        try {
+            // Background verification: keep existing user from persist while checking
+            const res = await authService.getMe();
+            if (res.success && res.data) {
+                set({ user: res.data }); // Silent update
+            } else {
+                // Token invalid or expired
+                set({ user: null, token: null, view: VIEW_STATES.WELCOME });
+            }
+        } catch (e) {
+            // On server/network error, don't kick user out immediately if we have a session
+            console.error('Auth check failed:', e);
+        }
+    },
+
     // Auth Actions
     setAuthStep: (step: 1 | 2 | 3 | 4) => set({ authStep: step }),
     setAuthEmail: (email: string) => set({ authEmail: email }),
@@ -411,5 +465,14 @@ export const useAppStore = create<AppState>((set) => ({
     setResetPassShowConfirmPassword: (show: boolean) => set({ resetPassShowConfirmPassword: show }),
     setResetPassLoading: (loading: boolean) => set({ resetPassLoading: loading }),
     setResetPassSuccess: (success: boolean) => set({ resetPassSuccess: success }),
+}), {
+    name: 'english-app-storage',
+    partialize: (state: AppState) => ({
+        user: state.user,
+        token: state.token,
+        view: state.view,
+        settingsDarkMode: state.settingsDarkMode,
+        settingsAutoPlay: state.settingsAutoPlay,
+        settingsLanguage: state.settingsLanguage
+    }),
 }));
-

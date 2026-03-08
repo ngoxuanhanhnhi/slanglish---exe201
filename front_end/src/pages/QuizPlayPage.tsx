@@ -20,7 +20,7 @@ const QuizPlayPage = () => {
     activeQuiz: quiz, quizPhase: phase, quizAnswers: answers,
     quizCurrentIdx: currentIdx, quizRemaining: remaining, quizElapsed: elapsed,
     setActiveQuiz: setQuiz, setQuizPhase: setPhase, setQuizAnswer: setAnswer,
-    resetQuizAnswers, setQuizCurrentIdx: setCurrentIdx, setQuizTimer: setTimer
+    setQuizCurrentIdx: setCurrentIdx, setQuizTimer: setTimer
   } = useAppStore();
 
   const [loading, setLoading] = useState(!quiz);
@@ -237,11 +237,10 @@ const QuizPlayPage = () => {
               onClick={() => {
                 submittedRef.current = false;
                 setPhase('quiz');
-                setAnswers({});
+                useAppStore.getState().resetQuizAnswers();
                 setCurrentIdx(0);
-                setElapsed(0);
+                setTimer(quiz.time_limit ? quiz.time_limit * 60 : null, 0);
                 setResult(null);
-                if (quiz.time_limit) setRemaining(quiz.time_limit * 60);
               }}
               className="flex-1 px-4 py-3 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors">
               Làm lại

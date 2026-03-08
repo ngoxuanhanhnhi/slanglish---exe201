@@ -4,11 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { useAuth } from '../features/auth/AuthContext';
+import { useAppStore } from '../stores/appStore';
 import AuthLayout from '../components/layouts/AuthLayout';
 import { Button, Input } from '../components/ui';
 import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
-import { useAppStore } from '../stores/appStore';
 
 const loginSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
@@ -39,7 +39,7 @@ const LoginPage = () => {
     try {
       await login(data.email, data.password);
       toast.success('Đăng nhập thành công!');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
@@ -58,7 +58,7 @@ const LoginPage = () => {
     try {
       await loginWithGoogle(credentialResponse.credential);
       toast.success('Đăng nhập với Google thành công!');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'Đăng nhập với Google thất bại');

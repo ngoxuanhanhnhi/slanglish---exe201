@@ -1,12 +1,11 @@
 import {
   createContext,
   useContext,
-  useState,
-  useEffect,
   ReactNode,
 } from 'react';
 import { User } from '../../types/auth.types';
 import { authService } from '../../services/auth.service';
+import { useAppStore } from '../../stores/appStore';
 
 interface AuthContextType {
   user: User | null;
@@ -34,90 +33,51 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem('token');
-      const savedUser = localStorage.getItem('user');
-
-      if (token && savedUser) {
-        try {
-          // Verify token is still valid
-          const response = await authService.getMe();
-          if (response.success && response.data) {
-            setUser(response.data);
-            localStorage.setItem('user', JSON.stringify(response.data));
-          } else {
-            // Token invalid, clear storage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-          }
-        } catch (error) {
-          // Token invalid, clear storage
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
-      }
-
-      setIsLoading(false);
-    };
-
-    initAuth();
-  }, []);
+  const {
+    user,
+    setUser,
+    setToken,
+    isInitialized,
+    logout: storeLogout
+  } = useAppStore();
 
   const login = async (email: string, password: string) => {
     const response = await authService.login({ email, password });
-
     if (response.success && response.data) {
       const { user: userData, token } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      setToken(token);
       setUser(userData);
     }
   };
 
   const register = async (email: string, password: string, name: string, country?: string, english_level?: string) => {
     const response = await authService.register({ email, password, name, country, english_level });
-
     if (response.success && response.data) {
       const { user: userData, token } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      setToken(token);
       setUser(userData);
     }
   };
 
   const loginWithGoogle = async (googleToken: string) => {
     const response = await authService.googleAuth({ token: googleToken });
-
     if (response.success && response.data) {
       const { user: userData, token } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      setToken(token);
       setUser(userData);
     }
   };
 
   const logout = async () => {
-    try {
-      await authService.logout();
-    } catch (error) {
-      // Continue with logout even if API fails
-    }
-
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+    await storeLogout();
   };
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   const isAdmin = user?.role === 'admin';
+  const isLoading = !isInitialized;
 
   return (
     <AuthContext.Provider

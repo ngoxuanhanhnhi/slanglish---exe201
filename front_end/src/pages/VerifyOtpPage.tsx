@@ -12,8 +12,6 @@ const VerifyOtpPage = () => {
     authCanResend,
     authLoading,
     setAuthOtp,
-    setAuthEmail,
-    setAuthResetToken,
     setAuthCountdown,
     setAuthCanResend,
     setAuthLoading,
@@ -64,7 +62,7 @@ const VerifyOtpPage = () => {
 
     try {
       setAuthLoading(true);
-      await authService.forgotPassword(authEmail);
+      await authService.forgotPassword({ email: authEmail });
       setAuthCountdown(15 * 60);
       setAuthCanResend(false);
       setAuthOtp(Array(6).fill(''));
@@ -88,13 +86,15 @@ const VerifyOtpPage = () => {
     try {
       setAuthLoading(true);
       const response = await authService.verifyOtp({
-        email: authEmail,
         otp: otpString
       });
 
-      setAuthResetToken(response.data.resetToken);
-      toast.success('Xác thực thành công');
-      setView(VIEW_STATES.RESET_PASSWORD);
+      if (response.data?.verified) {
+        toast.success('Xác thực thành công');
+        setView(VIEW_STATES.RESET_PASSWORD);
+      } else {
+        toast.error('Mã xác thực không đúng');
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Mã xác thực không chính xác');
     } finally {

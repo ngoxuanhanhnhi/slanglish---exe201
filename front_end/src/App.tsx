@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './features/auth/AuthContext';
 import { useAppStore, VIEW_STATES } from './stores/appStore';
 
@@ -45,16 +45,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Public Route Component (redirect if logged in)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
+  const { view } = useAppStore();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
+  if (isLoading) return null; // Wait for initialization
 
-  if (user) {
+  if (user && view === VIEW_STATES.LOGIN) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -62,59 +57,52 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  const { view, setView, selectedGrammarTopic, activeQuiz } = useAppStore();
-  const navigate = useNavigate();
+  const { view, setView, initializeAuth, isInitialized } = useAppStore();
   const location = useLocation();
 
-  // Sync store view with URL on initial load and navigation
+  // Initialize Auth on mount
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // 1. Sync URL to Store on mount and path change
+  // This is the ONLY sync we need if we use standard <Link> or navigate() on clicks
   useEffect(() => {
     const path = location.pathname;
-    if (path === '/welcome') setView(VIEW_STATES.WELCOME);
-    else if (path === '/login') setView(VIEW_STATES.LOGIN);
-    else if (path === '/register') setView(VIEW_STATES.REGISTER);
-    else if (path === '/forgot-password') setView(VIEW_STATES.FORGOT_PASSWORD);
-    else if (path === '/verify-otp') setView(VIEW_STATES.VERIFY_OTP);
-    else if (path === '/reset-password') setView(VIEW_STATES.RESET_PASSWORD);
-    else if (path === '/dashboard') setView(VIEW_STATES.HOME);
-    else if (path === '/vocabulary') setView(VIEW_STATES.VOCABULARY);
-    else if (path === '/lessons') setView(VIEW_STATES.LESSONS);
-    else if (path === '/quiz') setView(VIEW_STATES.QUIZ_LIST);
-    else if (path === '/profile') setView(VIEW_STATES.PROFILE);
-    else if (path === '/settings') setView(VIEW_STATES.SETTINGS);
-    else if (path.startsWith('/grammar/topic/')) setView(VIEW_STATES.GRAMMAR_TOPIC_DETAIL);
-    else if (path.startsWith('/quiz/')) setView(VIEW_STATES.QUIZ_PLAY);
-  }, []);
+    let newView: any = null;
 
-  // Sync URL with store view
-  useEffect(() => {
-    const pathMap: Record<string, string> = {
-      [VIEW_STATES.WELCOME]: '/welcome',
-      [VIEW_STATES.HOME]: '/dashboard',
-      [VIEW_STATES.LOGIN]: '/login',
-      [VIEW_STATES.REGISTER]: '/register',
-      [VIEW_STATES.FORGOT_PASSWORD]: '/forgot-password',
-      [VIEW_STATES.VERIFY_OTP]: '/verify-otp',
-      [VIEW_STATES.RESET_PASSWORD]: '/reset-password',
-      [VIEW_STATES.PROFILE]: '/profile',
-      [VIEW_STATES.SETTINGS]: '/settings',
-      [VIEW_STATES.LESSONS]: '/lessons',
-      [VIEW_STATES.VOCABULARY]: '/vocabulary',
-      [VIEW_STATES.QUIZ_LIST]: '/quiz',
-    };
-
-    let targetPath = pathMap[view];
-
-    // Handle dynamic routes
-    if (view === VIEW_STATES.GRAMMAR_TOPIC_DETAIL && selectedGrammarTopic) {
-      targetPath = `/grammar/topic/${selectedGrammarTopic.id}`;
-    } else if (view === VIEW_STATES.QUIZ_PLAY && activeQuiz) {
-      targetPath = `/quiz/${activeQuiz.id}`;
+    if (path === '/welcome') newView = VIEW_STATES.WELCOME;
+    else if (path === '/login') newView = VIEW_STATES.LOGIN;
+    else if (path === '/register') newView = VIEW_STATES.REGISTER;
+    else if (path === '/forgot-password') newView = VIEW_STATES.FORGOT_PASSWORD;
+    else if (path === '/verify-otp') newView = VIEW_STATES.VERIFY_OTP;
+    else if (path === '/reset-password') newView = VIEW_STATES.RESET_PASSWORD;
+    else if (path === '/dashboard') newView = VIEW_STATES.HOME;
+    else if (path === '/vocabulary') {
+      if (view !== VIEW_STATES.VOCAB_CATEGORIES) {
+        newView = VIEW_STATES.VOCABULARY;
+      }
     }
+    else if (path === '/lessons') newView = VIEW_STATES.LESSONS;
+    else if (path === '/quiz') newView = VIEW_STATES.QUIZ_LIST;
+    else if (path === '/profile') newView = VIEW_STATES.PROFILE;
+    else if (path === '/settings') newView = VIEW_STATES.SETTINGS;
+    else if (path.startsWith('/grammar/topic/')) newView = VIEW_STATES.GRAMMAR_TOPIC_DETAIL;
+    else if (path.startsWith('/quiz/')) newView = VIEW_STATES.QUIZ_PLAY;
 
-    if (targetPath && location.pathname !== targetPath) {
-      navigate(targetPath);
+    if (newView && newView !== view) {
+      setView(newView);
     }
-  }, [view, navigate, location.pathname, selectedGrammarTopic, activeQuiz]);
+  }, [location.pathname, setView]);
+
+  // Handle initialization loading state at the top
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <Routes>
