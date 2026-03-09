@@ -26,7 +26,7 @@ services:
   backend:
     build:
       context: ./back_end_dotnet
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: english_app_backend_dev
     restart: unless-stopped
     environment:
@@ -36,8 +36,11 @@ services:
       JWT__Issuer: "EnglishApp"
       JWT__Audience: "EnglishAppUsers"
       FrontendUrl: "http://localhost:3000"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
     ports:
       - "5000:5000"
+    volumes:
+      - ./back_end_dotnet:/app
     depends_on:
       db:
         condition: service_healthy

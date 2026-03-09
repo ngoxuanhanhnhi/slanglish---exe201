@@ -37,8 +37,11 @@ export interface TopicItem {
 
 // ─── Vocabulary ───────────────────────────────────────────────────────────────
 
-export const getVocabularyByCategory = async (category: string): Promise<VocabItem[]> => {
-  const res = await api.get(`/vocabulary?category=${category}`);
+export const getVocabularyByCategory = async (category: string, keyword?: string, difficulty?: string): Promise<VocabItem[]> => {
+  let url = `/vocabulary?category=${category}`;
+  if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+  if (difficulty) url += `&difficulty=${encodeURIComponent(difficulty)}`;
+  const res = await api.get(url);
   return res.data.data;
 };
 

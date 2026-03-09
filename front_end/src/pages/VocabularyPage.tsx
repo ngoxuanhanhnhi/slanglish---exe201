@@ -1084,6 +1084,7 @@ const VocabularyPage = () => {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('');
 
   // Progress
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
@@ -1121,12 +1122,8 @@ const VocabularyPage = () => {
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId) ?? null;
   const isTopic = TOPIC_CATEGORIES.includes(selectedCategoryId);
 
-  const filteredWords = words.filter(
-    (v) =>
-      v.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.definition_vi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.definition_en.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // The backend now handles filtering, so we use 'words' directly
+  const filteredWords = words;
 
   const totalPages = Math.max(1, Math.ceil(filteredWords.length / WORDS_PER_PAGE));
   const pagedWords = filteredWords.slice(
@@ -1149,23 +1146,32 @@ const VocabularyPage = () => {
 
   const fetchWords = useCallback(async (categoryId: string) => {
     setLoadingWords(true);
-    setWords([]);
+    // setWords([]); // Don't clear immediately to avoid flashing
     try {
-      const data = await getVocabularyByCategory(categoryId);
+      const data = await getVocabularyByCategory(categoryId, searchQuery, selectedDifficulty);
       setWords(data);
     } catch { setWords([]); }
     finally { setLoadingWords(false); }
-  }, []);
+  }, [searchQuery, selectedDifficulty]);
 
   const fetchTopicWords = useCallback(async (topicId: string) => {
     setLoadingWords(true);
-    setWords([]);
+    // setWords([]);
     try {
+      // Note: Topic search could also be server-side if topic endpoint is updated,
+      // but for now let's focus on the main category search as requested.
       const data = await getVocabularyByTopic(topicId);
-      setWords(data);
+      // If we are in a topic but have search/difficulty, we might still want to filter
+      const filtered = data.filter(v =>
+        (!searchQuery || v.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          v.definition_vi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          v.definition_en.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        (!selectedDifficulty || v.difficulty === selectedDifficulty)
+      );
+      setWords(filtered);
     } catch { setWords([]); }
     finally { setLoadingWords(false); }
-  }, []);
+  }, [searchQuery, selectedDifficulty]);
 
   const fetchTopicsList = useCallback(async (categoryId: string) => {
     setLoadingTopics(true);
@@ -1214,7 +1220,7 @@ const VocabularyPage = () => {
     }
   }, [view, selectedCategoryId, selectedTopic, user, isTopic, fetchWords, fetchTopicWords, fetchTopicsList, fetchProgress]);
 
-  useEffect(() => { setCurrentPage(1); }, [searchQuery]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, selectedDifficulty]);
 
   useEffect(() => {
     if (view === 'grammar') fetchGrammarLevels();
@@ -1542,14 +1548,26 @@ const VocabularyPage = () => {
 
           {/* Search */}
           <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="relative">
-              <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                placeholder={`Tìm kiếm trong "${selectedTopic ? selectedTopic.name : cat.name}"...`}
-                className="pl-10 border-gray-200"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  placeholder={`Tìm kiếm trong "${selectedTopic ? selectedTopic.name : cat.name}"...`}
+                  className="pl-10 border-gray-200"
+                  value={searchQuery}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <select
+                value={selectedDifficulty}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedDifficulty(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white sm:w-48"
+              >
+                <option value="">Tất cả độ khó</option>
+                <option value="beginner">Cơ bản</option>
+                <option value="intermediate">Trung bình</option>
+                <option value="advanced">Nâng cao</option>
+              </select>
             </div>
           </div>
 
