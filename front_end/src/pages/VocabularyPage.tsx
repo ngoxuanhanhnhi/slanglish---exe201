@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Input } from '../components/ui';
 import { useAuth } from '../features/auth/AuthContext';
 import {
@@ -1060,16 +1060,19 @@ const Pagination = ({ currentPage, totalPages, onChange }: PaginationProps) => {
 const VocabularyPage = () => {
   const { isAdmin, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Zustand Store
   const {
     view, setView,
     searchQuery, setSearchQuery,
-    selectedCategoryId, setCategory,
-    selectedTopic, setTopic,
-    selectedLevel, setLevel,
+    selectedCategoryId, setSelectedCategoryId,
+    selectedTopic, setTopicOnly,
+    selectedLevel, setLevelOnly,
     resetSelections
   } = useAppStore();
+
+  const { catId, topicId, levelId } = useParams();
 
   // Local Data State (specific to this page)
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
@@ -1206,6 +1209,49 @@ const VocabularyPage = () => {
   // ── Effects ───────────────────────────────────────────────────────────────────
   useEffect(() => { fetchCounts(); }, [fetchCounts]);
 
+  // ── URL Synchronization ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const path = location.pathname;
+
+    if (catId) {
+      if (selectedCategoryId !== catId) {
+        setSelectedCategoryId(catId);
+      }
+
+      if (topicId) {
+        const topic = topics.find(t => t.id === topicId);
+        if (topic) {
+          if (selectedTopic?.id !== topic.id) setTopicOnly(topic);
+          if (view !== 'topic-vocab-list') setView('topic-vocab-list');
+        }
+      } else {
+        if (selectedTopic !== null) setTopicOnly(null);
+        const targetView = isTopic ? 'topic-list' : 'vocab-list';
+        if (view !== targetView) setView(targetView);
+      }
+    } else if (levelId) {
+      const level = grammarLevels.find(l => l.id === levelId);
+      if (level) {
+        if (selectedLevel?.id !== level.id) setLevelOnly(level);
+        if (view !== 'grammar-topic-list') setView('grammar-topic-list');
+      }
+      if (selectedCategoryId !== 'slang') setSelectedCategoryId('slang');
+    } else {
+      if (path === '/grammar') {
+        if (view !== 'grammar') setView('grammar');
+        if (selectedLevel !== null) setLevelOnly(null);
+      } else if (path === '/vocabulary/categories') {
+        if (view !== 'vocab-categories') navigate('/vocabulary/categories');
+        if (selectedTopic !== null) setTopicOnly(null);
+        if (selectedCategoryId !== 'slang') setSelectedCategoryId('slang');
+      } else if (path === '/vocabulary') {
+        if (view !== 'vocabulary') setView('vocabulary');
+        if (selectedTopic !== null) setTopicOnly(null);
+        if (selectedCategoryId !== 'slang') setSelectedCategoryId('slang');
+      }
+    }
+  }, [location.pathname, catId, topicId, levelId, topics, grammarLevels, isTopic, view, selectedCategoryId, selectedTopic, selectedLevel, setView, setSelectedCategoryId, setTopicOnly, setLevelOnly]);
+
   useEffect(() => {
     if (view === 'vocab-list' && selectedCategoryId && !isTopic) {
       fetchWords(selectedCategoryId);
@@ -1232,25 +1278,24 @@ const VocabularyPage = () => {
 
   // ── Navigation ────────────────────────────────────────────────────────────────
 
-  const goRoot = () => { resetSelections(); setView(VIEW_STATES.VOCABULARY); };
-  const goVocabulary = () => { resetSelections(); setView(VIEW_STATES.VOCAB_CATEGORIES); };
+  const goRoot = () => { resetSelections(); navigate('/vocabulary'); };
+  const goVocabulary = () => { resetSelections(); navigate('/vocabulary/categories'); };
 
   const openCategory = (catId: string) => {
-    setCategory(catId);
+    navigate(`/vocabulary/${catId}`);
     setCurrentPage(1);
     setCompletedIds(new Set());
   };
 
   const openTopicVocabList = (topic: TopicItem) => {
-    setTopic(topic);
+    navigate(`/vocabulary/${selectedCategoryId}/${topic.id}`);
     setCurrentPage(1);
     setCompletedIds(new Set());
   };
 
-  const goGrammar = () => { setLevel(null); setView(VIEW_STATES.GRAMMAR); };
+  const goGrammar = () => { navigate('/grammar'); };
   const openGrammarLevel = (level: GrammarLevel) => {
-    setLevel(level);
-    // setExpandedGrammarTopicId(null);
+    navigate(`/grammar/${level.id}`);
   };
 
   // ── Grammar CRUD handlers ──────────────────────────────────────────────────
@@ -1993,8 +2038,8 @@ const VocabularyPage = () => {
     return renderWordList(selectedCategory, {
       label: selectedCategory.name,
       onClick: () => {
-        setTopic(null);
-        setView('topic-list');
+        setTopicOnly(null);
+        navigate(`/vocabulary/${selectedCategoryId}`);
         setSearchQuery('');
         setCurrentPage(1);
       },

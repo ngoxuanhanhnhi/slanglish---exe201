@@ -132,9 +132,12 @@ interface AppState {
     setView: (view: View) => void;
     goBack: () => void;
     setCategory: (categoryId: string) => void;
+    setSelectedCategoryId: (categoryId: string) => void;
     setSearchQuery: (query: string) => void;
     setTopic: (topic: TopicItem | null) => void;
+    setTopicOnly: (topic: TopicItem | null) => void;
     setLevel: (level: GrammarLevel | null) => void;
+    setLevelOnly: (level: GrammarLevel | null) => void;
     setGrammarTopic: (topic: GrammarTopic | null) => void;
     resetSelections: () => void;
 
@@ -344,6 +347,8 @@ export const useAppStore = create<AppState>()(persist((set) => ({
         selectedTopic: null
     }),
 
+    setSelectedCategoryId: (categoryId: string) => set({ selectedCategoryId: categoryId }),
+
     setSearchQuery: (query: string) => set({ searchQuery: query }),
 
     setTopic: (topic: TopicItem | null) => set({
@@ -351,10 +356,14 @@ export const useAppStore = create<AppState>()(persist((set) => ({
         view: topic ? VIEW_STATES.TOPIC_VOCAB_LIST : VIEW_STATES.TOPIC_LIST
     }),
 
+    setTopicOnly: (topic: TopicItem | null) => set({ selectedTopic: topic }),
+
     setLevel: (level: GrammarLevel | null) => set({
         selectedLevel: level,
         view: level ? VIEW_STATES.GRAMMAR_TOPIC_LIST : VIEW_STATES.GRAMMAR
     }),
+
+    setLevelOnly: (level: GrammarLevel | null) => set({ selectedLevel: level }),
 
     setGrammarTopic: (topic: GrammarTopic | null) => set({
         selectedGrammarTopic: topic,
@@ -365,7 +374,8 @@ export const useAppStore = create<AppState>()(persist((set) => ({
         searchQuery: '',
         selectedTopic: null,
         selectedLevel: null,
-        selectedGrammarTopic: null
+        selectedGrammarTopic: null,
+        selectedCategoryId: 'slang'
     }),
 
     // Auth Core Actions

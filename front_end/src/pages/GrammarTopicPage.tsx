@@ -1,4 +1,5 @@
 ﻿import { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import {
   HiOutlineChevronLeft,
@@ -19,6 +20,8 @@ const stripTimestampPrefix = (filename: string) => filename.replace(/^\d+-/, '')
 
 const GrammarTopicPage = () => {
   const { isAdmin } = useAuth();
+  const { id } = useParams();
+  const navigate = useNavigate();
   const {
     selectedGrammarTopic,
     grammarTopicDetail,
@@ -27,18 +30,18 @@ const GrammarTopicPage = () => {
     setGrammarTopicDetail,
     setGrammarLoading,
     setGrammarError,
-    goBack
   } = useAppStore();
 
   useEffect(() => {
-    if (!selectedGrammarTopic?.id) return;
+    const topicId = id || selectedGrammarTopic?.id;
+    if (!topicId) return;
 
     setGrammarLoading(true);
-    getGrammarTopic(selectedGrammarTopic.id)
+    getGrammarTopic(topicId)
       .then(setGrammarTopicDetail)
       .catch(() => setGrammarError('Không tải được nội dung chủ điểm. Vui lòng thử lại.'))
       .finally(() => setGrammarLoading(false));
-  }, [selectedGrammarTopic, setGrammarTopicDetail, setGrammarLoading, setGrammarError]);
+  }, [id, selectedGrammarTopic, setGrammarTopicDetail, setGrammarLoading, setGrammarError]);
 
   if (grammarLoading) {
     return (
@@ -56,7 +59,7 @@ const GrammarTopicPage = () => {
         </div>
         <p className="text-gray-500">{grammarError || 'Không tìm thấy chủ điểm ngữ pháp.'}</p>
         <button
-          onClick={() => goBack()}
+          onClick={() => navigate(-1)}
           className="mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium">
           ← Quay lại
         </button>
@@ -83,7 +86,7 @@ const GrammarTopicPage = () => {
       <div className="sticky top-16 z-30 bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3">
         <div className="max-w-5xl mx-auto flex items-center gap-2 text-sm">
           <button
-            onClick={() => goBack()}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-1 text-gray-500 hover:text-primary-600 transition-colors font-medium">
             <HiOutlineChevronLeft className="w-4 h-4" />
             Quay lại

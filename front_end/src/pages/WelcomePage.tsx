@@ -1,8 +1,10 @@
 import { HiOutlineBookOpen, HiOutlineAcademicCap, HiOutlineLightningBolt, HiOutlineChartBar, HiOutlineGlobe, HiOutlineUserGroup } from 'react-icons/hi';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../stores/appStore';
 
 const WelcomePage = () => {
   const { setView } = useAppStore();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white">
@@ -10,7 +12,7 @@ const WelcomePage = () => {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <button onClick={() => setView('home')} className="flex items-center gap-2">
+            <button onClick={() => navigate('/welcome')} className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center">
                 <HiOutlineBookOpen className="w-6 h-6 text-white" />
               </div>
@@ -18,13 +20,13 @@ const WelcomePage = () => {
             </button>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setView('login')}
+                onClick={() => navigate('/login')}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
               >
                 Đăng nhập
               </button>
               <button
-                onClick={() => setView('register')}
+                onClick={() => navigate('/register')}
                 className="px-5 py-2.5 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
               >
                 Đăng ký miễn phí
@@ -58,13 +60,13 @@ const WelcomePage = () => {
             {/* CTA Buttons */}
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
-                onClick={() => setView('register')}
+                onClick={() => navigate('/register')}
                 className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 hover:shadow-xl hover:shadow-primary-300"
               >
                 Bắt đầu học miễn phí
               </button>
               <button
-                onClick={() => setView('login')}
+                onClick={() => navigate('/login')}
                 className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-gray-700 bg-white rounded-xl hover:bg-gray-50 transition-all border border-gray-200 shadow-sm"
               >
                 Đã có tài khoản? Đăng nhập
@@ -187,7 +189,7 @@ const WelcomePage = () => {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => setView('register')}
+              onClick={() => navigate('/register')}
               className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-primary-600 bg-white rounded-xl hover:bg-gray-50 transition-all shadow-lg"
             >
               Đăng ký miễn phí ngay
@@ -207,8 +209,8 @@ const WelcomePage = () => {
               <span className="text-lg font-bold text-white">Slanglish</span>
             </div>
             <div className="flex items-center gap-6 text-sm">
-              <button onClick={() => setView('home')} className="hover:text-white transition-colors">Điều khoản</button>
-              <button onClick={() => setView('home')} className="hover:text-white transition-colors">Bảo mật</button>
+              <button onClick={() => navigate('/welcome')} className="hover:text-white transition-colors">Điều khoản</button>
+              <button onClick={() => navigate('/welcome')} className="hover:text-white transition-colors">Bảo mật</button>
               <span>© 2024 Slanglish</span>
             </div>
           </div>

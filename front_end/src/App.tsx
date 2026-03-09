@@ -79,15 +79,21 @@ function App() {
     else if (path === '/reset-password') newView = VIEW_STATES.RESET_PASSWORD;
     else if (path === '/dashboard') newView = VIEW_STATES.HOME;
     else if (path === '/vocabulary') {
-      if (view !== VIEW_STATES.VOCAB_CATEGORIES) {
-        newView = VIEW_STATES.VOCABULARY;
-      }
+      newView = VIEW_STATES.VOCABULARY;
+    }
+    else if (path === '/vocabulary/categories') {
+      newView = VIEW_STATES.VOCAB_CATEGORIES;
+    }
+    else if (path.startsWith('/vocabulary/')) {
+      newView = VIEW_STATES.VOCAB_LIST; // Default to list view, VocabularyPage will refine
     }
     else if (path === '/lessons') newView = VIEW_STATES.LESSONS;
     else if (path === '/quiz') newView = VIEW_STATES.QUIZ_LIST;
     else if (path === '/profile') newView = VIEW_STATES.PROFILE;
     else if (path === '/settings') newView = VIEW_STATES.SETTINGS;
+    else if (path === '/grammar') newView = VIEW_STATES.GRAMMAR;
     else if (path.startsWith('/grammar/topic/')) newView = VIEW_STATES.GRAMMAR_TOPIC_DETAIL;
+    else if (path.startsWith('/grammar/')) newView = VIEW_STATES.GRAMMAR_TOPIC_LIST;
     else if (path.startsWith('/quiz/')) newView = VIEW_STATES.QUIZ_PLAY;
 
     if (newView && newView !== view) {
@@ -166,6 +172,11 @@ function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="vocabulary" element={<VocabularyPage />} />
+        <Route path="vocabulary/categories" element={<VocabularyPage />} />
+        <Route path="vocabulary/:catId" element={<VocabularyPage />} />
+        <Route path="vocabulary/:catId/:topicId" element={<VocabularyPage />} />
+        <Route path="grammar" element={<VocabularyPage />} />
+        <Route path="grammar/:levelId" element={<VocabularyPage />} />
         <Route path="grammar/topic/:id" element={<GrammarTopicPage />} />
         <Route path="lessons" element={<LessonsPage />} />
         <Route path="quiz" element={<QuizPage />} />

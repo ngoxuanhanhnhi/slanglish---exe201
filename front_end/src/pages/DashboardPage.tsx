@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { userService } from '../services/user.service';
 import { DashboardStats } from '../types';
@@ -20,6 +21,7 @@ import {
 const DashboardPage = () => {
   const { user } = useAuth();
   const { setView, resetSelections } = useAppStore();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,9 +44,17 @@ const DashboardPage = () => {
 
   const navigateTo = (view: any) => {
     resetSelections();
-    // In a real app with routing, we'd also use useNavigate()
-    // but here we are following the user's pattern of managing view via state
-    setView(view);
+    if (view === VIEW_STATES.VOCABULARY) {
+      navigate('/vocabulary');
+    } else if (view === VIEW_STATES.VOCAB_CATEGORIES) {
+      navigate('/vocabulary/categories');
+    } else if (view === VIEW_STATES.GRAMMAR) {
+      navigate('/grammar');
+    } else if (view === 'quiz') {
+      navigate('/quiz');
+    } else {
+      setView(view);
+    }
   };
 
   const quickActions = [
@@ -52,7 +62,7 @@ const DashboardPage = () => {
       title: 'Học từ vựng',
       description: 'Mở rộng vốn từ của bạn',
       icon: HiOutlineBookOpen,
-      view: VIEW_STATES.VOCABULARY,
+      view: VIEW_STATES.VOCAB_CATEGORIES,
       color: 'bg-blue-500',
       lightColor: 'bg-blue-50',
     },
